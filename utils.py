@@ -4,14 +4,14 @@ import torch
 
 def parse_NER(file_path, window_size):
     # initialize dictionaries
-    word2index = dict()
-    index2word = dict()
-    label2index = dict()
-    index2label = dict()
+    word2index = {'<S>': 0, '<E>': 1}
+    index2word = {0: '<S>', 1: '<E>'}
+    label2index = {'START': 0, 'END': 1}
+    index2label = {0: 'START', 1: 'END'}
 
     with open(file_path, 'r', encoding='utf-8') as f:
-        word_index = 0
-        label_index = 0
+        word_index = 2
+        label_index = 2
         dataset = []
 
         # split into sentences (separated by blank rows)
@@ -49,14 +49,14 @@ def parse_NER(file_path, window_size):
 
 def parse_POS(file_path, window_size):
     # initialize dictionaries
-    word2index = dict()
-    index2word = dict()
-    label2index = dict()
-    index2label = dict()
+    word2index = {'<S>': 0, '<E>': 1}
+    index2word = {0: '<S>', 1: '<E>'}
+    label2index = {'START': 0, 'END': 1}
+    index2label = {0: 'START', 1: 'END'}
 
     with open(file_path, 'r', encoding='utf-8') as f:
-        word_index = 0
-        label_index = 0
+        word_index = 2
+        label_index = 2
         dataset = []
 
         # split into sentences (separated by blank rows)
