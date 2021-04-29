@@ -33,8 +33,9 @@ def most_similar(target_word, k):
 
     sim = np.array(sim)
     top_sim = [list(words2inx.keys())[list(words2inx.values()).index(i)] for i in sim.argsort()[-6:-1][::-1]]
+    dists = sim[sim.argsort()[-6:-1][::-1]]
 
-    return top_sim
+    return top_sim, dists
 
 
 if __name__ == '__main__':
@@ -42,6 +43,8 @@ if __name__ == '__main__':
     target_words = ['dog', 'england', 'john', 'explode', 'office']
 
     for word in target_words:
-        top_sim = most_similar(word, k)
+        top_sim, dists = most_similar(word, k)
         print('Top-', str(k), ' similar words to ', word, ':')
-        print(top_sim)
+        for close_word, dist in zip(top_sim, dists):
+            print(close_word, ' : ', dist)
+        print()
