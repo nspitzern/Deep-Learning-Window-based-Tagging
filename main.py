@@ -1,15 +1,26 @@
 import torch
 from torch.utils.data import DataLoader
 
+import sys
+
 import utils
 import tagger1
 
 
 if __name__ == '__main__':
-    pos_train_set, word2index, index2word, label2index, index2label = utils.parse_POS('./pos/train', window_size=2)
-    pos_dev_set, _, _, _, _ = utils.parse_POS('./pos/dev', window_size=2)
-    # ner_train_set, words2index, index2words, _, _ = utils.parse_NER('./ner/train', window_size=2)
-    # test_set = utils.parse_test_file('./pos/test', window_size=2)
+    if len(sys.argv) > 1:
+        embedding_src = sys.argv[1]
+    else:
+        embedding_src = 'learned_emb'
+    if embedding_src == 'learned_emb':
+        pos_train_set, word2index, index2word, label2index, index2label = utils.parse_POS('./pos/train', window_size=2)
+        pos_dev_set, _, _, _, _ = utils.parse_POS('./pos/dev', window_size=2)
+        # ner_train_set, words2index, index2words, _, _ = utils.parse_NER('./ner/train', window_size=2)
+        # test_set = utils.parse_test_file('./pos/test', window_size=2)
+    elif embedding_src == 'pretrained_emb':
+        print('pretrained embeddings')
+    else:
+        raise ValueError('Illegal embedding option!')
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     lr = 1e-3

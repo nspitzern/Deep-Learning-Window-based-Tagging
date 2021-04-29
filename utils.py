@@ -47,7 +47,7 @@ def parse_NER(file_path, window_size):
     return dataset, word2index, index2word, label2index, index2label
 
 
-def parse_POS(file_path, window_size):
+def parse_POS(file_path, window_size, pretrained=False):
     # initialize dictionaries
     word2index = {'<S>': 0, '<E>': 1, '<U>': 2}
     index2word = {0: '<S>', 1: '<E>', 2: '<U>'}
