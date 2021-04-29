@@ -13,13 +13,11 @@ class Tagger1Model(nn.Module):
         self.layer1 = nn.Linear(num_words * embed_size, hidden_dim)
         self.layer2 = nn.Linear(hidden_dim, out_dim)
 
-        self.softmax = nn.LogSoftmax(dim=0)
+        self.softmax = nn.LogSoftmax(dim=-1)
 
     def forward(self, words_idxs):
         # get the embedded vectors of each word and concat to a large vector
-        # words = torch.stack(words_idxs)
-        words = words_idxs
-        x = self.embed_layer(words).view((self.batch_size, -1))
+        x = self.embed_layer(words_idxs).view((self.batch_size, -1))
 
         x = torch.tanh(self.layer1(x))
         out = self.softmax(self.layer2(x))
@@ -38,17 +36,18 @@ def train_model(train_set, dev_set, model,  n_epochs, lr, device, word2index, la
     dev_losses = []
     dev_accuracy = []
     for e in range(n_epochs):
-        train_loss = train(model, train_set, optimizer, criterion, e, device, word2index, label2index)
+        train_loss = train(model, train_set, optimizer, criterion, device)
+        _, train_acc = evaluate(model, train_set, criterion, device)
         train_losses.append(train_loss)
 
-        dev_loss, accuracy = evaluate(model, dev_set, criterion, e, device,word2index, label2index)
+        dev_loss, accuracy = evaluate(model, dev_set, criterion, device)
         dev_losses.append(dev_loss)
         dev_accuracy.append(accuracy)
 
-        print(f'[{e}/{n_epochs}] dev loss: {dev_loss}, accuracy: {accuracy}')
+        print(f'[{e + 1}/{n_epochs}] train loss: {train_loss}, train accuracy: {train_acc}, dev loss: {dev_loss}, dev accuracy: {accuracy}')
 
 
-def train(model, train_set, optimizer, criterion, epoch, device, word2index, label2index):
+def train(model, train_set, optimizer, criterion, device):
     running_loss = 0
     for i, data in enumerate(train_set):
         labels_batch, words_batch = data
@@ -71,17 +70,13 @@ def train(model, train_set, optimizer, criterion, epoch, device, word2index, lab
 
         running_loss += loss.item()
 
-        if i % 2000 == 1999:
-            print(f'[{epoch + 1}, {i + 1}] train loss:{running_loss}')
-            running_loss = 0
-
-    return running_loss
+    return running_loss // len(train_set.dataset)
 
 
-def evaluate(model, dev_set, criterion, epoch, device, word2index, label2index):
+def evaluate(model, dev_set, criterion, device):
     running_loss = 0
-    accuracy = 0
-    total_num = 0
+    correct = 0.0
+    total = 0.0
     for i, data in enumerate(dev_set):
         labels_batch, words_batch = data
 
@@ -97,16 +92,12 @@ def evaluate(model, dev_set, criterion, epoch, device, word2index, label2index):
 
         running_loss += loss.item()
 
-        predictions = torch.argmax(outputs)
+        _, predictions = torch.max(outputs.data, 1)
 
-        accuracy += sum(predictions == labels_batch)
-        total_num += len(labels_batch)
+        correct += (predictions == labels_batch).sum().item()
+        total += labels_batch.size(0)
 
-        if i % 2000 == 1999:
-            print(f'[{epoch + 1}, {i + 1}] dev loss: {running_loss}')
-            running_loss = 0
-
-    return running_loss, accuracy / total_num
+    return running_loss, 100 * correct // total
 
 
 def predict(test_set, model, device, words2index, index2label):
