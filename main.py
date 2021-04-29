@@ -12,7 +12,7 @@ if __name__ == '__main__':
     # test_set = utils.parse_test_file('./pos/test', window_size=2)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    lr = 1e-2
+    lr = 1e-3
     n_epochs = 10
     batch_size = 32
 
