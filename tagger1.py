@@ -1,72 +1,70 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 import matplotlib.pyplot as plt
-import numpy as np
 
 
 class Tagger1Model(nn.Module):
-    def __init__(self, vocab_size, embed_size, num_words, hidden_dim, out_dim):
+    def __init__(self, batch_size, vocab_size, embed_size, num_words, hidden_dim, out_dim):
         super(Tagger1Model, self).__init__()
+        self.batch_size = batch_size
         self.embed_layer = nn.Embedding(vocab_size, embed_size)
 
         self.layer1 = nn.Linear(num_words * embed_size, hidden_dim)
         self.layer2 = nn.Linear(hidden_dim, out_dim)
 
+        self.softmax = nn.LogSoftmax(dim=0)
+
     def forward(self, words_idxs):
-        words = torch.tensor([])
-
         # get the embedded vectors of each word and concat to a large vector
-        for idx in words_idxs:
-            # convert the index to tensor
-            idx = torch.tensor([idx], dtype=torch.long)
-            # get embedding vector of the word
-            words = torch.cat((words, self.embed_layer(idx)), dim=1)
+        # words = torch.stack(words_idxs)
+        words = words_idxs
+        x = self.embed_layer(words).view((self.batch_size, -1))
 
-        x = F.tanh(self.layer1(words))
-        out = F.softmax(self.layer2(x))
+        x = torch.tanh(self.layer1(x))
+        out = self.softmax(self.layer2(x))
 
         return out
 
 
-def train_model(train_set, model,  n_epochs, lr, device, word2index, label2index):
+def train_model(train_set, dev_set, model,  n_epochs, lr, device, word2index, label2index):
     model.to(device)
     model.train()
 
     optimizer = optim.Adam(params=model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
 
+    train_losses = []
+    dev_losses = []
+    dev_accuracy = []
     for e in range(n_epochs):
-        train(model, train_set, optimizer, criterion, e, word2index, label2index)
+        train_loss = train(model, train_set, optimizer, criterion, e, device, word2index, label2index)
+        train_losses.append(train_loss)
+
+        dev_loss, accuracy = evaluate(model, dev_set, criterion, e, device,word2index, label2index)
+        dev_losses.append(dev_loss)
+        dev_accuracy.append(accuracy)
+
+        print(f'[{e}/{n_epochs}] dev loss: {dev_loss}, accuracy: {accuracy}')
 
 
-def train(model, train_set, optimizer, criterion, epoch, word2index, label2index):
-    # num_labels = torch.tensor([len(label2index.keys())])
-    num_labels = len(label2index.keys())
+def train(model, train_set, optimizer, criterion, epoch, device, word2index, label2index):
     running_loss = 0
     for i, data in enumerate(train_set):
-        label, words = data
-        words_idxs = []
+        labels_batch, words_batch = data
 
-        # get the indices of all the words
-        for word in words:
-            words_idxs.append(word2index[word])
+        words_batch = torch.stack(words_batch)
 
-        # get the label of the middle word
-        label_idx = torch.tensor(label2index[label], dtype=torch.long)
+        words_batch = words_batch.to(device)
+        labels_batch = labels_batch.to(device)
 
         optimizer.zero_grad()
 
         # predict
-        outputs = model(words_idxs)
+        outputs = model(words_batch)
 
-        # create one hot vector of the label
-        label_idx_vector = F.one_hot(label_idx, num_labels)
-        # label_idx_vector.T[label_idx] = 1
-
-        loss = criterion(outputs.view([-1]), label_idx_vector)
-        loss.backwards()
+        loss = criterion(outputs.squeeze(), labels_batch)
+        loss.backward()
 
         # backwards step
         optimizer.step()
@@ -77,37 +75,38 @@ def train(model, train_set, optimizer, criterion, epoch, word2index, label2index
             print(f'[{epoch + 1}, {i + 1}] train loss:{running_loss}')
             running_loss = 0
 
-    # return model
+    return running_loss
 
 
-def evaluate(model, train_set, optimizer, criterion, epoch, word2index, label2index):
+def evaluate(model, dev_set, criterion, epoch, device, word2index, label2index):
     running_loss = 0
-    for i, data in enumerate(train_set):
-        label, words = data
-        words_idxs = []
+    accuracy = 0
+    total_num = 0
+    for i, data in enumerate(dev_set):
+        labels_batch, words_batch = data
 
-        # get the indices of all the words
-        for word in words:
-            words_idxs.append(word2index[word])
+        words_batch = torch.stack(words_batch)
 
-        # get the label of the middle word
-        label_idx = torch.tensor(label2index[label], dtype=torch.long)
+        words_batch = words_batch.to(device)
+        labels_batch = labels_batch.to(device)
 
         # predict
-        outputs = model(words_idxs)
-        loss = criterion(outputs, label_idx)
-        loss.backwards()
+        outputs = model(words_batch)
 
-        # backwards step
-        optimizer.step()
+        loss = criterion(outputs.squeeze(), labels_batch)
 
         running_loss += loss.item()
 
+        predictions = torch.argmax(outputs)
+
+        accuracy += sum(predictions == labels_batch)
+        total_num += len(labels_batch)
+
         if i % 2000 == 1999:
-            print(f'[{epoch + 1}, {i + 1}] dev loss:{running_loss}')
+            print(f'[{epoch + 1}, {i + 1}] dev loss: {running_loss}')
             running_loss = 0
 
-    # return model
+    return running_loss, accuracy / total_num
 
 
 def predict(test_set, model, device, words2index, index2label):
@@ -117,14 +116,13 @@ def predict(test_set, model, device, words2index, index2label):
     predicted_labels = []
 
     for i, data in enumerate(test_set):
-        words = data
-        words_idxs = []
+        words_batch = data
+        words_batch = torch.stack(words_batch)
 
-        for word in words:
-            words_idxs.append(words2index[word])
+        words_batch = words_batch.to(device)
 
         # predict
-        outputs = model(words_idxs)
+        outputs = model(words_batch)
 
         # get the index of the label
         index = torch.argmax(outputs)

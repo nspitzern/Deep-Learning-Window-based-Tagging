@@ -4,10 +4,10 @@ import torch
 
 def parse_NER(file_path, window_size):
     # initialize dictionaries
-    word2index = {'<S>': 0, '<E>': 1}
-    index2word = {0: '<S>', 1: '<E>'}
-    label2index = {'START': 0, 'END': 1}
-    index2label = {0: 'START', 1: 'END'}
+    word2index = {'<S>': 0, '<E>': 1, '<U>': 2}
+    index2word = {0: '<S>', 1: '<E>', 2: '<U>'}
+    label2index = {'<START>': 0, '<END>': 1, '<UNSEEN>': 2}
+    index2label = {0: '<START>', 1: '<END>', 2: '<UNSEEN>'}
 
     with open(file_path, 'r', encoding='utf-8') as f:
         word_index = 2
@@ -49,10 +49,10 @@ def parse_NER(file_path, window_size):
 
 def parse_POS(file_path, window_size):
     # initialize dictionaries
-    word2index = {'<S>': 0, '<E>': 1}
-    index2word = {0: '<S>', 1: '<E>'}
-    label2index = {'START': 0, 'END': 1}
-    index2label = {0: 'START', 1: 'END'}
+    word2index = {'<S>': 0, '<E>': 1, '<U>': 2}
+    index2word = {0: '<S>', 1: '<E>', 2: '<U>'}
+    label2index = {'<START>': 0, '<END>': 1, '<UNSEEN>': 2}
+    index2label = {0: '<START>', 1: '<END>', 2: '<UNSEEN>'}
 
     with open(file_path, 'r', encoding='utf-8') as f:
         word_index = 2
@@ -88,6 +88,14 @@ def parse_POS(file_path, window_size):
                     label2index[pos] = label_index
                     index2label[label_index] = pos
                     label_index += 1
+
+    for i in range(len(dataset)):
+        pos, words = dataset[i]
+        for j in range(len(words)):
+            dataset[i][1][j] = word2index[words[j]]
+        dataset[i] = list(dataset[i])
+        dataset[i][0] = label2index[pos]
+        dataset[i] = tuple(dataset[i])
 
     return dataset, word2index, index2word, label2index, index2label
 
