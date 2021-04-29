@@ -7,7 +7,10 @@ import tagger1
 
 if __name__ == '__main__':
     pos_train_set, word2index, index2word, label2index, index2label = utils.parse_POS('./pos/train', window_size=2)
+    pos_train_set = utils.convert_dataset_to_index(pos_train_set, word2index, label2index)
+
     pos_dev_set, _, _, _, _ = utils.parse_POS('./pos/dev', window_size=2)
+    pos_dev_set = utils.convert_dataset_to_index(pos_dev_set, word2index, label2index)
     # ner_train_set, words2index, index2words, _, _ = utils.parse_NER('./ner/train', window_size=2)
     # test_set = utils.parse_test_file('./pos/test', window_size=2)
 
@@ -23,6 +26,8 @@ if __name__ == '__main__':
     hidden_dim = 128
     out_dim = len(label2index.keys())
 
+    is_pos = True
+
     # define train dataloader
     train_data = DataLoader(pos_train_set, batch_size=batch_size, shuffle=True, drop_last=True, pin_memory=True, num_workers=4)
 
@@ -31,5 +36,5 @@ if __name__ == '__main__':
 
     model = tagger1.Tagger1Model(batch_size, vocab_size, embed_size, num_words, hidden_dim, out_dim)
 
-    tagger1.train_model(train_data, dev_data, model, n_epochs, lr, device, word2index, label2index)
+    tagger1.train_model(train_data, dev_data, model, n_epochs, lr, device, word2index, label2index, is_pos)
 
