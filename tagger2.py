@@ -1,15 +1,17 @@
 import torch
 import torch.nn as nn
+import torch.optim as optim
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import numpy as np
+
+import utils
 
 
 class Tagger2Model(nn.Module):
     def __init__(self, batch_size, vocab_size, embed_size, num_words, hidden_dim, out_dim):
         super(Tagger2Model, self).__init__()
         self.batch_size = batch_size
-        self.embed_layer = nn.Embedding(vocab_size, embed_size)
 
         self.layer1 = nn.Linear(num_words * embed_size, hidden_dim)
         self.layer2 = nn.Linear(hidden_dim, out_dim)
@@ -29,7 +31,6 @@ class Tagger2Model(nn.Module):
 def train_model(train_set, dev_set, model,  n_epochs, lr, device, word2index, label2index):
     model.to(device)
     model.train()
-
     optimizer = optim.Adam(params=model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
 
@@ -55,6 +56,7 @@ def train(model, train_set, optimizer, criterion, device):
         labels_batch, words_batch = data
 
         words_batch = torch.stack(words_batch, dim=1)
+        word2vec, _ = utils.create_word_vec_dict()
 
         words_batch = words_batch.to(device)
         labels_batch = labels_batch.to(device)

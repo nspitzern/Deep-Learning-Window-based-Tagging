@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 import sys
 
 import utils
-import tagger1
+import tagger1, tagger2
 
 
 if __name__ == '__main__':
@@ -18,7 +18,10 @@ if __name__ == '__main__':
         # ner_train_set, words2index, index2words, _, _ = utils.parse_NER('./ner/train', window_size=2)
         # test_set = utils.parse_test_file('./pos/test', window_size=2)
     elif embedding_src == 'pretrained_emb':
-        print('pretrained embeddings')
+        pos_train_set, word2index, index2word, label2index, index2label = utils.parse_POS('./pos/train', window_size=2, pretrained=True)
+        pos_dev_set, _, _, _, _ = utils.parse_POS('./pos/dev', window_size=2, pretrained=True)
+        # ner_train_set, words2index, index2words, _, _ = utils.parse_NER('./ner/train', window_size=2)
+        #         # test_set = utils.parse_test_file('./pos/test', window_size=2)
     else:
         raise ValueError('Illegal embedding option!')
 
@@ -40,7 +43,10 @@ if __name__ == '__main__':
     # define train dataloader
     dev_data = DataLoader(pos_dev_set, batch_size=batch_size, shuffle=False, drop_last=True, pin_memory=True, num_workers=4)
 
-    model = tagger1.Tagger1Model(batch_size, vocab_size, embed_size, num_words, hidden_dim, out_dim)
-
-    tagger1.train_model(train_data, dev_data, model, n_epochs, lr, device, word2index, label2index)
+    if embedding_src == 'learned_emb':
+        model = tagger1.Tagger1Model(batch_size, vocab_size, embed_size, num_words, hidden_dim, out_dim)
+        tagger1.train_model(train_data, dev_data, model, n_epochs, lr, device, word2index, label2index)
+    else:
+        model = tagger2.Tagger2Model(batch_size, vocab_size, embed_size, num_words, hidden_dim, out_dim)
+        tagger2.train_model(train_data, dev_data, model, n_epochs, lr, device, word2index, label2index)
 

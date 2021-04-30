@@ -2,6 +2,23 @@ import numpy as np
 import torch
 
 
+def create_word_vec_dict():
+    vecs = np.loadtxt("pretrained vectors.txt")
+    with open("words.txt", 'r') as words_file:
+        words = words_file.read().splitlines()
+    words2vecs = dict()
+    words2inx = dict()
+    i, j = 0, 0
+    for word in words:
+        if word not in words2vecs:
+            words2inx[word] = j
+            vec = vecs[i]
+            words2vecs[word] = vec
+            j += 1
+        i += 1
+    return words2vecs, words2inx
+
+
 def parse_NER(file_path, window_size):
     # initialize dictionaries
     word2index = {'<S>': 0, '<E>': 1, '<U>': 2}
