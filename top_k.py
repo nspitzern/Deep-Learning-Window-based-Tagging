@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy import linalg as LA
+import utils
 
 
 def cosine_calc(target_vec, vec):
@@ -13,27 +14,15 @@ def cosine_calc(target_vec, vec):
 
 
 def most_similar(target_word, k):
-    vecs = np.loadtxt("pretrained vectors.txt")
-    with open("words.txt", 'r') as words_file:
-        words = words_file.read().splitlines()
-    words2vecs = dict()
-    words2inx = dict()
-    i, j = 0, 0
-    for word in words:
-        if word not in words2vecs:
-            words2inx[word] = j
-            vec = vecs[i]
-            words2vecs[word] = vec
-            j += 1
-        i += 1
+    words2vecs, words2inx = utils.create_word_vec_dict()
     sim = []
     target_vec = words2vecs[target_word]
     for vec in words2vecs.values():
         sim.append(cosine_calc(target_vec, vec))
 
     sim = np.array(sim)
-    top_sim = [list(words2inx.keys())[list(words2inx.values()).index(i)] for i in sim.argsort()[-6:-1][::-1]]
-    dists = sim[sim.argsort()[-6:-1][::-1]]
+    top_sim = [list(words2inx.keys())[list(words2inx.values()).index(i)] for i in sim.argsort()[-(k+1):-1][::-1]]
+    dists = sim[sim.argsort()[-(k+1):-1][::-1]]
 
     return top_sim, dists
 
