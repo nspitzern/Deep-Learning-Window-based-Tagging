@@ -4,33 +4,34 @@ import torch.optim as optim
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 
-from utils import save_model
+from utils import save_model, draw_graphs
 
 
 class Tagger1Model(nn.Module):
-    def __init__(self, batch_size, vocab_size, embed_size, num_words, hidden_dim, out_dim):
+    def __init__(self, vocab_size, embed_size, num_words, hidden_dim, out_dim):
         super(Tagger1Model, self).__init__()
-        self.batch_size = batch_size
+        self.num_words = num_words
+        self.embed_size = embed_size
         self.embed_layer = nn.Embedding(vocab_size, embed_size)
 
         self.layer1 = nn.Linear(num_words * embed_size, hidden_dim)
         self.layer2 = nn.Linear(hidden_dim, out_dim)
-        self.dropout = nn.Dropout(0.3)
+        self.dropout = nn.Dropout(0.5)
 
         self.softmax = nn.LogSoftmax(dim=-1)
 
     def forward(self, words_idxs):
         # get the embedded vectors of each word and concat to a large vector
-        x = self.embed_layer(words_idxs).view((self.batch_size, -1))
+        x = self.embed_layer(words_idxs).view(-1, self.num_words * self.embed_size)
 
         x = torch.tanh(self.layer1(x))
-        # x = self.dropout(x)
+        x = self.dropout(x)
         out = self.softmax(self.layer2(x))
 
         return out
 
 
-def train_model(train_set, dev_set, model,  n_epochs, lr, device, word2index, label2index, is_pos=False):
+def train_model(train_set, dev_set, model,  n_epochs, lr, device, index2word, index2label, is_pos=False):
     model.to(device)
     model.train()
 
@@ -44,11 +45,11 @@ def train_model(train_set, dev_set, model,  n_epochs, lr, device, word2index, la
 
     for e in range(n_epochs):
         train_loss = train(model, train_set, optimizer, criterion, device)
-        _, train_acc = evaluate(model, train_set, criterion, device, is_pos)
+        _, train_acc = evaluate(model, train_set, criterion, device, index2label, is_pos)
         train_losses.append(train_loss)
         train_accuracy.append(train_acc)
 
-        dev_loss, accuracy = evaluate(model, dev_set, criterion, device, is_pos)
+        dev_loss, accuracy = evaluate(model, dev_set, criterion, device, index2label, is_pos)
         dev_losses.append(dev_loss)
         dev_accuracy.append(accuracy)
 
@@ -56,6 +57,10 @@ def train_model(train_set, dev_set, model,  n_epochs, lr, device, word2index, la
               f' dev loss: {dev_loss}, dev accuracy: {accuracy}%')
 
     save_model(model, train_losses, train_accuracy, dev_losses, dev_accuracy, '.')
+
+    # draw graphs of loss and accuracy history
+    draw_graphs(train_losses, dev_losses, n_epochs, 'Loss History', 'Train Loss', 'Validation Loss')
+    draw_graphs(train_accuracy, dev_accuracy, n_epochs, 'Accuracy History', 'Train Accuracy', 'Validation Accuracy')
 
 
 def train(model, train_set, optimizer, criterion, device):
@@ -84,7 +89,7 @@ def train(model, train_set, optimizer, criterion, device):
     return running_loss / len(train_set.dataset)
 
 
-def evaluate(model, dev_set, criterion, device, is_pos):
+def evaluate(model, dev_set, criterion, device, index2label, is_pos):
     running_loss = 0
     correct = 0.0
     total = 0.0
@@ -100,7 +105,6 @@ def evaluate(model, dev_set, criterion, device, is_pos):
         outputs = model(words_batch)
 
         loss = criterion(outputs.squeeze(), labels_batch)
-        # loss = F.nll_loss(outputs.squeeze(), labels_batch)
 
         running_loss += loss.item()
 
@@ -110,7 +114,18 @@ def evaluate(model, dev_set, criterion, device, is_pos):
             correct += (predictions == labels_batch).sum().item()
             total += labels_batch.size(0)
         else:
-            pass
+            for prediction, real_label in zip(predictions, labels_batch):
+                # count how many labels were in this batch
+                total += 1
+
+                # check if the prediction in like the real label
+                if prediction == real_label:
+                    # if both are 'O' skip it because there are many 'O's (don't count it)
+                    if index2label[int(prediction)] == 'O':
+                        total -= 1
+                    else:
+                        # otherwise count the correct results
+                        correct += 1
 
     return running_loss / len(dev_set.dataset), round(100 * correct / total, 3)
 

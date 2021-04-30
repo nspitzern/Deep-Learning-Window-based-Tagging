@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import torch
 
 
@@ -10,8 +11,8 @@ def parse_NER(file_path, window_size):
     index2label = {0: '<START>', 1: '<END>', 2: '<UNSEEN>'}
 
     with open(file_path, 'r', encoding='utf-8') as f:
-        word_index = 2
-        label_index = 2
+        word_index = 3
+        label_index = 3
         dataset = []
 
         # split into sentences (separated by blank rows)
@@ -55,8 +56,8 @@ def parse_POS(file_path, window_size, pretrained=False):
     index2label = {0: '<START>', 1: '<END>', 2: '<UNSEEN>'}
 
     with open(file_path, 'r', encoding='utf-8') as f:
-        word_index = 2
-        label_index = 2
+        word_index = 3
+        label_index = 3
         dataset = []
 
         # split into sentences (separated by blank rows)
@@ -146,3 +147,16 @@ def load_model(model_path, train_loss_history_path, train_accuracy_history_path,
     dev_loss_history = torch.load(dev_loss_history_path)
     dev_accuracy_history = torch.load(dev_accuracy_history_path)
     return model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history
+
+
+def draw_graphs(train_history, dev_history, n_epochs, plot_title, train_title, dev_title):
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+    fig.suptitle(plot_title)
+    x = torch.arange(n_epochs) + 1
+    ax1.set_title(train_title)
+    ax1.plot(x, train_history)
+    ax2.set_title(dev_title)
+    ax2.plot(x, dev_history)
+
+    plt.show()
+
