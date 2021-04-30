@@ -106,15 +106,23 @@ def parse_POS(file_path, window_size, pretrained=False):
                     index2label[label_index] = pos
                     label_index += 1
 
+    return dataset, word2index, index2word, label2index, index2label
+
+
+def convert_dataset_to_index(dataset, word2index, label2index):
     for i in range(len(dataset)):
+        # get current sample
         pos, words = dataset[i]
+        # go over the words in the window
         for j in range(len(words)):
-            dataset[i][1][j] = word2index[words[j]]
+            # convert word to index. if the word was not seen - convert to unseen letter
+            dataset[i][1][j] = word2index.get(words[j], word2index['<U>'])
+        # change the tag to index
         dataset[i] = list(dataset[i])
-        dataset[i][0] = label2index[pos]
+        dataset[i][0] = label2index.get(pos, label2index['<UNSEEN>'])
         dataset[i] = tuple(dataset[i])
 
-    return dataset, word2index, index2word, label2index, index2label
+    return dataset
 
 
 def parse_test_file(file_path, window_size):
@@ -138,3 +146,20 @@ def parse_test_file(file_path, window_size):
                 dataset.append(words[i - window_size: i + window_size + 1])
 
     return dataset
+
+
+def save_model(model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history, path):
+    torch.save(model, f'{path}/model.path')
+    torch.save(train_loss_history, f'{path}/train_loss_history.path')
+    torch.save(train_accuracy_history, f'{path}/train_accuracy_history.path')
+    torch.save(dev_loss_history, f'{path}/dev_loss_history.path')
+    torch.save(dev_accuracy_history, f'{path}/dev_accuracy_history.path')
+
+
+def load_model(model_path, train_loss_history_path, train_accuracy_history_path, dev_loss_history_path, dev_accuracy_history_path):
+    model = torch.load(model_path)
+    train_loss_history = torch.load(train_loss_history_path)
+    train_accuracy_history = torch.load(train_accuracy_history_path)
+    dev_loss_history = torch.load(dev_loss_history_path)
+    dev_accuracy_history = torch.load(dev_accuracy_history_path)
+    return model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history
