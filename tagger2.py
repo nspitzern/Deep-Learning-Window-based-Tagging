@@ -28,7 +28,7 @@ class Tagger2Model(nn.Module):
         return out
 
 
-def train_model(train_set, dev_set, model,  n_epochs, lr, device, word2index, label2index):
+def train_model(train_set, dev_set, model,  n_epochs, lr, device, word2index, label2index, is_pos=False):
     model.to(device)
     model.train()
     optimizer = optim.Adam(params=model.parameters(), lr=lr)
