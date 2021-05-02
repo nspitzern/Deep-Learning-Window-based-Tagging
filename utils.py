@@ -28,8 +28,8 @@ def parse_NER(file_path, window_size):
     index2label = {0: '<START>', 1: '<END>', 2: '<UNSEEN>'}
 
     with open(file_path, 'r', encoding='utf-8') as f:
-        word_index = 3
-        label_index = 3
+        word_index = len(word2index)
+        label_index = len(label2index)
         dataset = []
 
         # split into sentences (separated by blank rows)
@@ -39,7 +39,7 @@ def parse_NER(file_path, window_size):
             if sentence == '' or sentence == '\n':
                 continue
             # add special words of start and end of sentence with special labels (<S> = START, <E> = END)
-            sentence = '<S>\tSTART\n<S>\tSTART\n' + sentence + '\n<E>\tEND\n<E>\tEND'
+            sentence = '<S>\tSTART\n' * window_size + sentence + '\n<E>\tEND' * window_size
             words = sentence.split('\n')
 
             # go over the words (not including the start and end words)
@@ -73,8 +73,8 @@ def parse_POS(file_path, window_size, pretrained=False):
     index2label = {0: '<START>', 1: '<END>', 2: '<UNSEEN>'}
 
     with open(file_path, 'r', encoding='utf-8') as f:
-        word_index = 3
-        label_index = 3
+        word_index = len(word2index)
+        label_index = len(label2index)
         dataset = []
 
         # split into sentences (separated by blank rows)
@@ -84,7 +84,7 @@ def parse_POS(file_path, window_size, pretrained=False):
             if sentence == '' or sentence == '\n':
                 continue
             # add special words of start and end of sentence with special labels (<S> = START, <E> = END)
-            sentence = '<S> START\n<S> START\n' + sentence + '\n<E> END\n<E> END'
+            sentence = '<S> START\n' * window_size + sentence + '\n<E> END' * window_size
             words = sentence.split('\n')
 
             # go over the words (not including the start and end words)
@@ -93,7 +93,7 @@ def parse_POS(file_path, window_size, pretrained=False):
                 word, pos = words[i].split(' ')
 
                 # insert to the dataset a tuple of label and 5 words when the label is of the middle word
-                dataset.append((pos, [word.split(' ')[0] for word in words[i - window_size: i + window_size + 1]]))
+                dataset.append((pos, [word.split(' ')[0].lower() for word in words[i - window_size: i + window_size + 1]]))
 
                 # keep track of word and index
                 if word not in word2index:
@@ -127,7 +127,6 @@ def convert_dataset_to_index(dataset, word2index, label2index):
 
 
 def parse_test_file(file_path, window_size):
-
     with open(file_path, 'r', encoding='utf-8') as f:
         dataset = []
 
@@ -138,7 +137,7 @@ def parse_test_file(file_path, window_size):
             if sentence == '' or sentence == '\n':
                 continue
             # add special words of start and end of sentence with special labels (<S> = START, <E> = END)
-            sentence = '<S>\n<S>\n' + sentence + '\n<E>\n<E>'
+            sentence = '<S>\n' * window_size + sentence + '\n<E>' * window_size
             words = sentence.split('\n')
 
             # go over the words (not including the start and end words)
@@ -147,6 +146,11 @@ def parse_test_file(file_path, window_size):
                 dataset.append(words[i - window_size: i + window_size + 1])
 
     return dataset
+
+
+def export_predictions(predictions, path):
+    with open(path, 'w', encoding='utf-8') as f:
+        f.writelines('\n'.join(predictions))
 
 
 def save_model(model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history, path):

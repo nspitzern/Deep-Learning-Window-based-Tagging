@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
+from torch.optim.lr_scheduler import ExponentialLR, StepLR
 
 from utils import save_model, draw_graphs
 
@@ -35,7 +36,7 @@ def train_model(train_set, dev_set, model,  n_epochs, lr, device, index2word, in
     model.to(device)
     model.train()
 
-    optimizer = optim.Adam(params=model.parameters(), lr=lr)
+    optimizer = optim.Adam(params=model.parameters(), lr=lr, weight_decay=1e-4)
     criterion = nn.CrossEntropyLoss()
 
     train_losses = []
@@ -130,7 +131,7 @@ def evaluate(model, dev_set, criterion, device, index2label, is_pos):
     return running_loss / len(dev_set.dataset), round(100 * correct / total, 3)
 
 
-def predict(test_set, model, device, words2index, index2label):
+def predict(test_set, model, device, index2label):
     model.to(device)
     model.eval()
 
@@ -149,7 +150,7 @@ def predict(test_set, model, device, words2index, index2label):
         index = torch.argmax(outputs)
 
         # ge the label from the index
-        label = index2label[index]
+        label = index2label.get(index.item(), 'UNSEEN')
 
         predicted_labels.append(label)
 
