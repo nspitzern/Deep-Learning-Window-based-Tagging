@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
+import tagger1
 
 
 def create_word_vec_dict():
@@ -126,6 +127,27 @@ def convert_dataset_to_index(dataset, word2index, label2index):
     return dataset
 
 
+def get_suffix_and_prefix(word, word_index, sub_word_size=3):
+    words2index = dict()
+    index2words = dict()
+
+    if len(words2index) >= sub_word_size:
+        # get the suffix and prefix of the word
+        prefix = word[:sub_word_size]
+        suffix = word[-sub_word_size:]
+
+        words2index[word] = word_index
+        index2words[word_index] = word
+
+        words2index[prefix] = word_index + 1
+        index2words[word_index + 1] = prefix
+
+        words2index[suffix] = word_index + 2
+        index2words[word_index + 2] = suffix
+
+    return words2index, index2words
+
+
 def parse_test_file(file_path, window_size):
     with open(file_path, 'r', encoding='utf-8') as f:
         dataset = []
@@ -154,15 +176,16 @@ def export_predictions(predictions, path):
 
 
 def save_model(model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history, path):
-    torch.save(model, f'{path}/model.path')
+    torch.save(model.state_dict(), f'{path}/model.path')
     torch.save(train_loss_history, f'{path}/train_loss_history.path')
     torch.save(train_accuracy_history, f'{path}/train_accuracy_history.path')
     torch.save(dev_loss_history, f'{path}/dev_loss_history.path')
     torch.save(dev_accuracy_history, f'{path}/dev_accuracy_history.path')
 
 
-def load_model(model_path, train_loss_history_path, train_accuracy_history_path, dev_loss_history_path, dev_accuracy_history_path):
-    model = torch.load(model_path)
+def load_model(model_path, train_loss_history_path, train_accuracy_history_path, dev_loss_history_path, dev_accuracy_history_path, vocab_size, embed_size, num_words, hidden_dim, out_dim):
+    model = tagger1.Tagger1Model(vocab_size, embed_size, num_words, hidden_dim, out_dim)
+    model = model.load_state_dict(torch.load(model_path))
     train_loss_history = torch.load(train_loss_history_path)
     train_accuracy_history = torch.load(train_accuracy_history_path)
     dev_loss_history = torch.load(dev_loss_history_path)
