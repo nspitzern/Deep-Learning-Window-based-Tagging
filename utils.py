@@ -7,9 +7,9 @@ def create_word_vec_dict():
     vecs = np.loadtxt("pretrained vectors.txt")
     with open("words.txt", 'r') as words_file:
         words = words_file.read().splitlines()
-    words2vecs = dict()
-    words2inx = dict()
-    i, j = 0, 0
+    words2vecs = {'<U>': np.zeros(vecs.shape[1])}
+    words2inx = {'<U>': 0}
+    i, j = 0, 1
     for word in words:
         if word not in words2vecs:
             words2inx[word] = j
