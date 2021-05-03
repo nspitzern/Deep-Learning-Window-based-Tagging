@@ -94,39 +94,40 @@ def evaluate(model, dev_set, criterion, device, index2label, is_pos):
     running_loss = 0
     correct = 0.0
     total = 0.0
-    for i, data in enumerate(dev_set):
-        labels_batch, vecs_batch = data
+    with torch.no_grad():
+        for i, data in enumerate(dev_set):
+            labels_batch, vecs_batch = data
 
-        vecs_batch = torch.stack(vecs_batch, dim=1).type(torch.FloatTensor)
+            vecs_batch = torch.stack(vecs_batch, dim=1).type(torch.FloatTensor)
 
-        vecs_batch = vecs_batch.to(device)
-        labels_batch = labels_batch.to(device)
+            vecs_batch = vecs_batch.to(device)
+            labels_batch = labels_batch.to(device)
 
-        # predict
-        outputs = model(vecs_batch)
+            # predict
+            outputs = model(vecs_batch)
 
-        loss = criterion(outputs.squeeze(), labels_batch)
+            loss = criterion(outputs.squeeze(), labels_batch)
 
-        running_loss += loss.item()
+            running_loss += loss.item()
 
-        predictions = torch.argmax(outputs.data, dim=1)
+            predictions = torch.argmax(outputs.data, dim=1)
 
-        if is_pos:
-            correct += (predictions == labels_batch).sum().item()
-            total += labels_batch.size(0)
-        else:
-            for prediction, real_label in zip(predictions, labels_batch):
-                # count how many labels were in this batch
-                total += 1
+            if is_pos:
+                correct += (predictions == labels_batch).sum().item()
+                total += labels_batch.size(0)
+            else:
+                for prediction, real_label in zip(predictions, labels_batch):
+                    # count how many labels were in this batch
+                    total += 1
 
-                # check if the prediction in like the real label
-                if prediction == real_label:
-                    # if both are 'O' skip it because there are many 'O's (don't count it)
-                    if index2label[int(prediction)] == 'O':
-                        total -= 1
-                    else:
-                        # otherwise count the correct results
-                        correct += 1
+                    # check if the prediction in like the real label
+                    if prediction == real_label:
+                        # if both are 'O' skip it because there are many 'O's (don't count it)
+                        if index2label[int(prediction)] == 'O':
+                            total -= 1
+                        else:
+                            # otherwise count the correct results
+                            correct += 1
 
     return running_loss / len(dev_set.dataset), round(100 * correct / total, 3)
 

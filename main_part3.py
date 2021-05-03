@@ -1,9 +1,11 @@
 import torch
 from torch.utils.data import DataLoader
+import os
 
 import utils
 import tagger2
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 
 if __name__ == '__main__':
     pos_train_set, word2index, index2word, label2index, index2label = utils.parse_POS('./pos/train', window_size=2)
