@@ -32,7 +32,7 @@ class Tagger2Model(nn.Module):
         return out
 
 
-def train_model(train_set, dev_set, model,  n_epochs, lr, device, index2word, index2label, is_pos=False):
+def train_model(train_set, dev_set, model,  n_epochs, lr, device, index2label, is_pos=False):
     model.to(device)
     model.train()
 

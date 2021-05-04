@@ -10,10 +10,10 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 if __name__ == '__main__':
     pos_train_set, word2index, index2word, label2index, index2label = utils.parse_POS('./pos/train', window_size=2)
     word2vec, _ = utils.create_word_vec_dict()
-    pos_train_set = utils.convert_dataset_to_index(pos_train_set, word2vec, label2index)
+    pos_train_set = utils.convert_dataset_to_index(pos_train_set, word2vec, label2index, pretrained=True)
 
     pos_dev_set, _, _, _, _ = utils.parse_POS('./pos/dev', window_size=2)
-    pos_dev_set = utils.convert_dataset_to_index(pos_dev_set, word2vec, label2index)
+    pos_dev_set = utils.convert_dataset_to_index(pos_dev_set, word2vec, label2index, pretrained=True)
     # ner_train_set, words2index, index2words, _, _ = utils.parse_NER('./ner/train', window_size=2)
     # test_set = utils.parse_test_file('./pos/test', window_size=2)
 
@@ -23,10 +23,10 @@ if __name__ == '__main__':
     batch_size = 32
 
     # define model's parameters
-    vocab_size = len(word2index.keys())
+    vocab_size = len(word2vec.keys())
     embed_size = 50
     num_words = 5
-    hidden_dim = 128
+    hidden_dim = 100
     out_dim = len(label2index.keys())
 
     is_pos = True
@@ -39,5 +39,5 @@ if __name__ == '__main__':
 
     model = tagger2.Tagger2Model(vocab_size, embed_size, num_words, hidden_dim, out_dim)
 
-    tagger2.train_model(train_data, dev_data, model, n_epochs, lr, device, word2index, label2index, is_pos)
+    tagger2.train_model(train_data, dev_data, model, n_epochs, lr, device, index2label, is_pos)
 

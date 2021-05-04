@@ -1,16 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
-import tagger1
 
 
 def create_word_vec_dict():
     vecs = np.loadtxt("pretrained vectors.txt")
     with open("words.txt", 'r') as words_file:
         words = words_file.read().splitlines()
-    words2vecs = {'<U>': np.zeros(vecs.shape[1])}
-    words2inx = {'<U>': 0}
-    i, j = 0, 1
+    words2vecs = {'<s>': np.zeros(vecs.shape[1]), '<e>': np.zeros(vecs.shape[1])}
+    words2inx = {'<s>': 0, '<e>': 1}
+    # words2vecs = {}
+    # words2inx = {}
+    i, j = 0, len(words2vecs)
     for word in words:
         if word not in words2vecs:
             words2inx[word] = j
@@ -23,8 +24,8 @@ def create_word_vec_dict():
 
 def parse_NER(file_path, window_size):
     # initialize dictionaries
-    word2index = {'<S>': 0, '<E>': 1, '<U>': 2}
-    index2word = {0: '<S>', 1: '<E>', 2: '<U>'}
+    word2index = {'<S>': 0, '<E>': 1, 'UUUNKKK': 2}
+    index2word = {0: '<S>', 1: '<E>', 2: 'UUUNKKK'}
     label2index = {'<START>': 0, '<END>': 1, '<UNSEEN>': 2}
     index2label = {0: '<START>', 1: '<END>', 2: '<UNSEEN>'}
 
@@ -68,8 +69,8 @@ def parse_NER(file_path, window_size):
 
 def parse_POS(file_path, window_size, pretrained=False):
     # initialize dictionaries
-    word2index = {'<S>': 0, '<E>': 1, '<U>': 2}
-    index2word = {0: '<S>', 1: '<E>', 2: '<U>'}
+    word2index = {'<S>': 0, '<E>': 1, 'UUUNKKK': 2}
+    index2word = {0: '<S>', 1: '<E>', 2: 'UUUNKKK'}
     label2index = {'<START>': 0, '<END>': 1, '<UNSEEN>': 2}
     index2label = {0: '<START>', 1: '<END>', 2: '<UNSEEN>'}
 
@@ -111,14 +112,35 @@ def parse_POS(file_path, window_size, pretrained=False):
     return dataset, word2index, index2word, label2index, index2label
 
 
-def convert_dataset_to_index(dataset, word2index, label2index):
+def check_number(word, vocab):
+    # word is a number (positive, negative, whole, float)
+    if all(c.isdigit() or c == '.' or c == '-' or c == '+' for c in word):
+        new_word = ''
+
+        for c in word:
+            new_word += 'DG' if c.isdigit() else c
+
+        if new_word in vocab:
+            return new_word
+        else:
+            return 'NNNUMMM'
+
+    # word is of form '###,#####'
+    elif all(ch.isdigit() or ch == ',' for ch in word) and any(ch.isdigit() for ch in word):
+        return "NNNUMMM"
+    return word
+
+
+def convert_dataset_to_index(dataset, word2index, label2index, pretrained=False):
     for i in range(len(dataset)):
         # get current sample
         pos, words = dataset[i]
         # go over the words in the window
         for j in range(len(words)):
+            if pretrained:
+                words[j] = check_number(words[j], word2index.keys())
             # convert word to index. if the word was not seen - convert to unseen letter
-            dataset[i][1][j] = word2index.get(words[j], word2index['<U>'])
+            dataset[i][1][j] = word2index.get(words[j], word2index['UUUNKKK'])
         # change the tag to index
         dataset[i] = list(dataset[i])
         dataset[i][0] = label2index.get(pos, label2index['<UNSEEN>'])
@@ -183,8 +205,7 @@ def save_model(model, train_loss_history, train_accuracy_history, dev_loss_histo
     torch.save(dev_accuracy_history, f'{path}/dev_accuracy_history.path')
 
 
-def load_model(model_path, train_loss_history_path, train_accuracy_history_path, dev_loss_history_path, dev_accuracy_history_path, vocab_size, embed_size, num_words, hidden_dim, out_dim):
-    model = tagger1.Tagger1Model(vocab_size, embed_size, num_words, hidden_dim, out_dim)
+def load_model(model, model_path, train_loss_history_path, train_accuracy_history_path, dev_loss_history_path, dev_accuracy_history_path):
     model = model.load_state_dict(torch.load(model_path))
     train_loss_history = torch.load(train_loss_history_path)
     train_accuracy_history = torch.load(train_accuracy_history_path)

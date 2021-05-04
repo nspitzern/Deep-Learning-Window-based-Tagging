@@ -7,9 +7,9 @@ import numpy as np
 from utils import save_model, draw_graphs
 
 
-class Tagger2Model(nn.Module):
+class Tagger3Model(nn.Module):
     def __init__(self, vocab_size, embed_size, num_words, hidden_dim, out_dim):
-        super(Tagger2Model, self).__init__()
+        super(Tagger3Model, self).__init__()
         self.num_words = num_words
         self.embed_size = embed_size
         self.embed_layer = nn.Embedding(vocab_size, embed_size)
@@ -29,7 +29,6 @@ class Tagger2Model(nn.Module):
         out = self.softmax(self.layer2(x))
 
         return out
-
 
 
 def train_model(train_set, dev_set, model,  n_epochs, lr, device, index2word, index2label, is_pos=False):
