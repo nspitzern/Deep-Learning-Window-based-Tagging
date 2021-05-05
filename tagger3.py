@@ -176,7 +176,7 @@ def predict(test_set, model, device, index2word, word2index, index2label):
     return predicted_labels
 
 
-def convert_dataset_to_index(dataset, word2index, index2word, label2index, prefix2index, suffix2index, pretrained=False):
+def convert_dataset_to_index(dataset, word2index, label2index, prefix2index, suffix2index, pretrained=False):
     for i in range(len(dataset)):
         # get current sample
         pos, words = dataset[i]
@@ -186,14 +186,17 @@ def convert_dataset_to_index(dataset, word2index, index2word, label2index, prefi
         for j in range(len(words)):
             if pretrained:
                 words[j] = check_number(words[j], word2index.keys())
+            # for each word, check if word is in the training set. if not change to unknown
             word = words[j] if words[j] in word2index else 'UUUNKKK'
-            prefix.append(prefix2index.get(word[:3], prefix2index['UUU']))
-            suffix.append(suffix2index.get(word[-3:], suffix2index['KKK']))
+            # get hte prefix and suffix of the word
+            prefix.append(prefix2index[word[:3]])
+            suffix.append(suffix2index[word[-3:]])
             # convert word to index. if the word was not seen - convert to unseen letter
-            dataset[i][1][j] = word2index.get(words[j], word2index['UUUNKKK'])
+            dataset[i][1][j] = word2index[words[j]]
         # change the tag to index
         dataset[i] = list(dataset[i])
         dataset[i][0] = label2index.get(pos, label2index['<UNSEEN>'])
+        # add the prefixes and suffixes (indices) of the words in the window
         dataset[i].append(prefix)
         dataset[i].append(suffix)
         dataset[i] = tuple(dataset[i])
