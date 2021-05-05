@@ -4,15 +4,18 @@ import torch.optim as optim
 import matplotlib.pyplot as plt
 import numpy as np
 
-from utils import save_model, draw_graphs
+from utils import save_model, draw_graphs, check_number
 
 
 class Tagger3Model(nn.Module):
-    def __init__(self, vocab_size, embed_size, num_words, hidden_dim, out_dim):
+    def __init__(self, vocab_size, embed_size, num_words, hidden_dim, out_dim, prefix_size, suffix_size):
         super(Tagger3Model, self).__init__()
         self.num_words = num_words
         self.embed_size = embed_size
+
         self.embed_layer = nn.Embedding(vocab_size, embed_size)
+        self.prefix_embed_layer = nn.Embedding(prefix_size, embed_size)
+        self.suffix_embed_layer = nn.Embedding(suffix_size, embed_size)
 
         self.layer1 = nn.Linear(num_words * embed_size, hidden_dim)
         self.layer2 = nn.Linear(hidden_dim, out_dim)
@@ -20,9 +23,18 @@ class Tagger3Model(nn.Module):
 
         self.softmax = nn.LogSoftmax(dim=-1)
 
-    def forward(self, words_idxs):
+    def forward(self, words_idxs, prefix_idxs, suffix_idxs):
+
         # get the embedded vectors of each word and concat to a large vector
         x = self.embed_layer(words_idxs).view(-1, self.num_words * self.embed_size)
+
+        # get the embedded vectors of each word and concat to a large vector
+        prefix = self.prefix_embed_layer(prefix_idxs).view(-1, self.num_words * self.embed_size)
+
+        # get the embedded vectors of each word and concat to a large vector
+        suffix = self.suffix_embed_layer(suffix_idxs).view(-1, self.num_words * self.embed_size)
+
+        x = prefix + x + suffix
 
         x = torch.tanh(self.layer1(x))
         x = self.dropout(x)
@@ -31,7 +43,7 @@ class Tagger3Model(nn.Module):
         return out
 
 
-def train_model(train_set, dev_set, model,  n_epochs, lr, device, index2word, index2label, is_pos=False):
+def train_model(train_set, dev_set, model,  n_epochs, lr, device, index2word, word2index, index2label, is_pos=False):
     model.to(device)
     model.train()
 
@@ -66,17 +78,21 @@ def train_model(train_set, dev_set, model,  n_epochs, lr, device, index2word, in
 def train(model, train_set, optimizer, criterion, device):
     running_loss = 0
     for i, data in enumerate(train_set):
-        labels_batch, words_batch = data
+        labels_batch, words_batch, prefix_idxs, suffix_idxs = data
 
         words_batch = torch.stack(words_batch, dim=1)
+        prefix_idxs = torch.stack(prefix_idxs, dim=1)
+        suffix_idxs = torch.stack(suffix_idxs, dim=1)
 
         words_batch = words_batch.to(device)
         labels_batch = labels_batch.to(device)
+        prefix_idxs = prefix_idxs.to(device)
+        suffix_idxs = suffix_idxs.to(device)
 
         optimizer.zero_grad()
 
         # predict
-        outputs = model(words_batch)
+        outputs = model(words_batch, prefix_idxs, suffix_idxs)
 
         loss = criterion(outputs.squeeze(), labels_batch)
         loss.backward()
@@ -94,15 +110,19 @@ def evaluate(model, dev_set, criterion, device, index2label, is_pos):
     correct = 0.0
     total = 0.0
     for i, data in enumerate(dev_set):
-        labels_batch, words_batch = data
+        labels_batch, words_batch, prefix_idxs, suffix_idxs = data
 
         words_batch = torch.stack(words_batch, dim=1)
+        prefix_idxs = torch.stack(prefix_idxs, dim=1)
+        suffix_idxs = torch.stack(suffix_idxs, dim=1)
 
         words_batch = words_batch.to(device)
         labels_batch = labels_batch.to(device)
+        prefix_idxs = prefix_idxs.to(device)
+        suffix_idxs = suffix_idxs.to(device)
 
         # predict
-        outputs = model(words_batch)
+        outputs = model(words_batch, prefix_idxs, suffix_idxs)
 
         loss = criterion(outputs.squeeze(), labels_batch)
 
@@ -130,7 +150,7 @@ def evaluate(model, dev_set, criterion, device, index2label, is_pos):
     return running_loss / len(dev_set.dataset), round(100 * correct / total, 3)
 
 
-def predict(test_set, model, device, index2label):
+def predict(test_set, model, device, index2word, word2index, index2label):
     model.to(device)
     model.eval()
 
@@ -154,3 +174,28 @@ def predict(test_set, model, device, index2label):
         predicted_labels.append(label)
 
     return predicted_labels
+
+
+def convert_dataset_to_index(dataset, word2index, index2word, label2index, prefix2index, suffix2index, pretrained=False):
+    for i in range(len(dataset)):
+        # get current sample
+        pos, words = dataset[i]
+        suffix = []
+        prefix = []
+        # go over the words in the window
+        for j in range(len(words)):
+            if pretrained:
+                words[j] = check_number(words[j], word2index.keys())
+            word = words[j] if words[j] in word2index else 'UUUNKKK'
+            prefix.append(prefix2index.get(word[:3], prefix2index['UUU']))
+            suffix.append(suffix2index.get(word[-3:], suffix2index['KKK']))
+            # convert word to index. if the word was not seen - convert to unseen letter
+            dataset[i][1][j] = word2index.get(words[j], word2index['UUUNKKK'])
+        # change the tag to index
+        dataset[i] = list(dataset[i])
+        dataset[i][0] = label2index.get(pos, label2index['<UNSEEN>'])
+        dataset[i].append(prefix)
+        dataset[i].append(suffix)
+        dataset[i] = tuple(dataset[i])
+
+    return dataset

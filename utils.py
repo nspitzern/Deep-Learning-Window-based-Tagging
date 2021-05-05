@@ -7,8 +7,8 @@ def create_word_vec_dict():
     vecs = np.loadtxt("pretrained vectors.txt")
     with open("words.txt", 'r') as words_file:
         words = words_file.read().splitlines()
-    words2vecs = {'<s>': np.zeros(vecs.shape[1]), '<e>': np.zeros(vecs.shape[1])}
-    words2inx = {'<s>': 0, '<e>': 1}
+    words2vecs = {'<S>': np.zeros(vecs.shape[1]), '<E>': np.zeros(vecs.shape[1])}
+    words2inx = {'<S>': 0, '<E>': 1}
     # words2vecs = {}
     # words2inx = {}
     i, j = 0, len(words2vecs)
@@ -149,25 +149,55 @@ def convert_dataset_to_index(dataset, word2index, label2index, pretrained=False)
     return dataset
 
 
-def get_suffix_and_prefix(word, word_index, sub_word_size=3):
-    words2index = dict()
-    index2words = dict()
+def convert_to_sub_words(word2index):
+    prefix_dict = dict()
+    suffix_dict = dict()
 
-    if len(words2index) >= sub_word_size:
-        # get the suffix and prefix of the word
-        prefix = word[:sub_word_size]
-        suffix = word[-sub_word_size:]
+    for word, index in word2index.items():
+        prefix = word[:3]
+        suffix = word[-3:]
 
-        words2index[word] = word_index
-        index2words[word_index] = word
+        # if prefix not in prefix_dict:
+        prefix_dict[prefix] = index
+        # if suffix not in suffix_dict:
+        suffix_dict[suffix] = index
 
-        words2index[prefix] = word_index + 1
-        index2words[word_index + 1] = prefix
+    return prefix_dict, suffix_dict
 
-        words2index[suffix] = word_index + 2
-        index2words[word_index + 2] = suffix
-
-    return words2index, index2words
+# def convert_to_sub_words(word2index, index2word):
+#     new_word2index = dict()
+#     new_index2word = dict()
+#
+#     for word, index in word2index.items():
+#         # get prefix and suffix (with indices)
+#         curr_word2index, curr_index2word = get_suffix_and_prefix(word, len(new_word2index))
+#
+#         # update word2index and index2word
+#         new_word2index.update(curr_word2index)
+#         new_index2word.update(curr_index2word)
+#
+#     return new_word2index, new_index2word
+#
+#
+# def get_suffix_and_prefix(word, word_index, sub_word_size=3):
+#     words2index = dict()
+#     index2words = dict()
+#
+#     words2index[word] = word_index
+#     index2words[word_index] = word
+#
+#     if len(word) > sub_word_size:
+#         # get the suffix and prefix of the word
+#         prefix = word[:sub_word_size]
+#         suffix = word[-sub_word_size:]
+#
+#         words2index[prefix] = word_index + 1
+#         index2words[word_index + 1] = prefix
+#
+#         words2index[suffix] = word_index + 2
+#         index2words[word_index + 2] = suffix
+#
+#     return words2index, index2words
 
 
 def parse_test_file(file_path, window_size):
