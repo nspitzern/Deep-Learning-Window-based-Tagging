@@ -22,7 +22,7 @@ def create_word_vec_dict():
     return words2vecs, words2inx
 
 
-def parse_NER(file_path, window_size):
+def parse_NER(file_path, window_size, with_subs=False, sub_word_size=3):
     # initialize dictionaries
     word2index = {'<S>': 0, '<E>': 1, 'UUUNKKK': 2}
     index2word = {0: '<S>', 1: '<E>', 2: 'UUUNKKK'}
@@ -36,6 +36,7 @@ def parse_NER(file_path, window_size):
 
         # split into sentences (separated by blank rows)
         sentences = f.read().split('\n\n')
+        ignored = ['<s>', '<e>', '-docstart-']
 
         for sentence in sentences:
             if sentence == '' or sentence == '\n':
@@ -49,14 +50,29 @@ def parse_NER(file_path, window_size):
                 # for each word split into word and label
                 word, ner = words[i].split('\t')
 
-                # insert to the dataset a tuple of label and 5 words when the label is of the middle word
-                dataset.append((ner, [word.split('\t')[0] for word in words[i - window_size: i + window_size + 1]]))
+                # insert to the dataset a tuple of label> and 5 words when the label is of the middle word
+                if with_subs:
+                    dataset.append((ner, [(word.split('\t')[0].lower(), word.split('\t')[0].lower()[:sub_word_size], word.split('\t')[0].lower()[-sub_word_size:]) for word in words[i - window_size: i + window_size + 1] if word.split(' ')[0].lower() not in ignored]))                    
+                else:
+                    dataset.append((ner, [word.split('\t')[0].lower() for word in words[i - window_size: i + window_size + 1]]))
 
                 # keep track of word and index
                 if word not in word2index:
                     word2index[word] = word_index
                     index2word[word_index] = word
                     word_index += 1
+                    
+                    if with_subs:
+                        prefix = word[:sub_word_size]
+                        suffix = word[-sub_word_size:]
+                        if prefix not in word2index:
+                            word2index[prefix] = word_index
+                            index2word[word_index + 1] = prefix
+                            word_index += 1
+                        if suffix not in word2index:
+                            word2index[suffix] = word_index
+                            index2word[word_index + 2] = suffix
+                            word_index += 1
 
                 # keep track of label and index
                 if ner not in label2index:
@@ -67,7 +83,7 @@ def parse_NER(file_path, window_size):
     return dataset, word2index, index2word, label2index, index2label
 
 
-def parse_POS(file_path, window_size, pretrained=False):
+def parse_POS(file_path, window_size, with_subs=False, sub_word_size=3):
     # initialize dictionaries
     word2index = {'<S>': 0, '<E>': 1, 'UUUNKKK': 2}
     index2word = {0: '<S>', 1: '<E>', 2: 'UUUNKKK'}
@@ -95,13 +111,29 @@ def parse_POS(file_path, window_size, pretrained=False):
                 word, pos = words[i].split(' ')
 
                 # insert to the dataset a tuple of label and 5 words when the label is of the middle word
-                dataset.append((pos, [word.split(' ')[0].lower() for word in words[i - window_size: i + window_size + 1]]))
-
+                if with_subs:
+                    dataset.append((pos, [(word.split(' ')[0].lower(), word.split(' ')[0].lower()[:sub_word_size], word.split(' ')[0].lower()[-sub_word_size:]) for word in words[i - window_size: i + window_size + 1]]))                    
+                else:
+                    dataset.append((pos, [word.split(' ')[0].lower() for word in words[i - window_size: i + window_size + 1]]))
                 # keep track of word and index
                 if word not in word2index:
                     word2index[word] = word_index
                     index2word[word_index] = word
                     word_index += 1
+                    
+                    if with_subs:
+                        prefix = word[:sub_word_size]
+                        suffix = word[-sub_word_size:]
+
+                        if prefix not in word2index:
+                            word2index[prefix] = word_index
+                            index2word[word_index + 1] = prefix
+                            word_index += 1
+
+                        if suffix not in word2index:
+                            word2index[suffix] = word_index
+                            index2word[word_index + 2] = suffix
+                            word_index += 1
 
                 # keep track of label and index
                 if pos not in label2index:
@@ -110,7 +142,6 @@ def parse_POS(file_path, window_size, pretrained=False):
                     label_index += 1
 
     return dataset, word2index, index2word, label2index, index2label
-
 
 def check_number(word, vocab):
     # word is a number (positive, negative, whole, float)

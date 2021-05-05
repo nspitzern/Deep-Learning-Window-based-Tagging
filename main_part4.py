@@ -4,6 +4,9 @@ from torch.utils.data import DataLoader
 import utils
 from tagger3 import Tagger3Model, train_model, predict, convert_dataset_to_index
 
+import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 
 if __name__ == '__main__':
     is_pretrained = False
@@ -11,10 +14,18 @@ if __name__ == '__main__':
     prefix2index, suffix2index = utils.convert_to_sub_words(word2index)
     pos_train_set = convert_dataset_to_index(pos_train_set, word2index, index2word, label2index, prefix2index, suffix2index)
 
+<<<<<<< HEAD
     pos_dev_set, _, _, _, _ = utils.parse_POS('./pos/dev', window_size=2)
     pos_dev_set = convert_dataset_to_index(pos_dev_set, word2index, index2word, label2index, prefix2index, suffix2index)
 
     # pos_test_set = utils.parse_test_file('./pos/test', window_size=2)
+=======
+    ner_train_set, word2index, index2word, label2index, index2label = utils.parse_NER('./ner/train', window_size=2, with_subs=True)
+    ner_train_set = utils.convert_dataset_to_index(ner_train_set, word2index, label2index)
+
+    ner_dev_set, _, _, _, _ = utils.parse_NER('./ner/dev', window_size=2, with_subs=True)
+    ner_dev_set = utils.convert_dataset_to_index(ner_dev_set, word2index, label2index)
+>>>>>>> 40b23b8ad75653b77d4fed574b39f3bfd1ed07ac
 
     # ner_train_set, word2index, index2word, label2index, index2label = utils.parse_NER('./ner/train', window_size=2)
     # ner_train_set = utils.convert_dataset_to_index(ner_train_set, word2index, label2index)
