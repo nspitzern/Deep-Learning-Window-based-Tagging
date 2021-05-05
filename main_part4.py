@@ -4,6 +4,9 @@ from torch.utils.data import DataLoader
 import utils
 from tagger3 import Tagger3Model, train_model, predict
 
+import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 
 if __name__ == '__main__':
     is_pretrained = False
@@ -15,10 +18,10 @@ if __name__ == '__main__':
 
     # pos_test_set = utils.parse_test_file('./pos/test', window_size=2)
 
-    ner_train_set, word2index, index2word, label2index, index2label = utils.parse_NER('./ner/train', window_size=2)
+    ner_train_set, word2index, index2word, label2index, index2label = utils.parse_NER('./ner/train', window_size=2, with_subs=True)
     ner_train_set = utils.convert_dataset_to_index(ner_train_set, word2index, label2index)
 
-    ner_dev_set, _, _, _, _ = utils.parse_NER('./ner/dev', window_size=2)
+    ner_dev_set, _, _, _, _ = utils.parse_NER('./ner/dev', window_size=2, with_subs=True)
     ner_dev_set = utils.convert_dataset_to_index(ner_dev_set, word2index, label2index)
 
     ner_test_set = utils.parse_test_file('./ner/test', window_size=2)
