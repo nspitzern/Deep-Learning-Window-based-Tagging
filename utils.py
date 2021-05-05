@@ -7,8 +7,8 @@ def create_word_vec_dict():
     vecs = np.loadtxt("pretrained vectors.txt")
     with open("words.txt", 'r') as words_file:
         words = words_file.read().splitlines()
-    words2vecs = {'<S>': np.zeros(vecs.shape[1]), '<E>': np.zeros(vecs.shape[1])}
-    words2inx = {'<S>': 0, '<E>': 1}
+    words2vecs = {'<s>': np.zeros(vecs.shape[1]), '<e>': np.zeros(vecs.shape[1])}
+    words2inx = {'<s>': 0, '<e>': 1}
     # words2vecs = {}
     # words2inx = {}
     i, j = 0, len(words2vecs)
@@ -22,10 +22,11 @@ def create_word_vec_dict():
     return words2vecs, words2inx
 
 
-def parse_NER(file_path, window_size, with_subs=False, sub_word_size=3):
+# def parse_NER(file_path, window_size, with_subs=False, sub_word_size=3):
+def parse_NER(file_path, window_size):
     # initialize dictionaries
-    word2index = {'<S>': 0, '<E>': 1, 'UUUNKKK': 2}
-    index2word = {0: '<S>', 1: '<E>', 2: 'UUUNKKK'}
+    word2index = {'<s>': 0, '<e>': 1, 'UUUNKKK': 2}
+    index2word = {0: '<s>', 1: '<e>', 2: 'UUUNKKK'}
     label2index = {'<START>': 0, '<END>': 1, '<UNSEEN>': 2}
     index2label = {0: '<START>', 1: '<END>', 2: '<UNSEEN>'}
 
@@ -42,19 +43,20 @@ def parse_NER(file_path, window_size, with_subs=False, sub_word_size=3):
             if sentence == '' or sentence == '\n':
                 continue
             # add special words of start and end of sentence with special labels (<S> = START, <E> = END)
-            sentence = '<S>\tSTART\n' * window_size + sentence + '\n<E>\tEND' * window_size
+            sentence = '<s>\tSTART\n' * window_size + sentence + '\n<e>\tEND' * window_size
             words = sentence.split('\n')
 
             # go over the words (not including the start and end words)
             for i in range(window_size, len(words) - window_size):
                 # for each word split into word and label
                 word, ner = words[i].split('\t')
+                word = word.lower()
 
                 # insert to the dataset a tuple of label> and 5 words when the label is of the middle word
-                if with_subs:
-                    dataset.append((ner, [(word.split('\t')[0].lower(), word.split('\t')[0].lower()[:sub_word_size], word.split('\t')[0].lower()[-sub_word_size:]) for word in words[i - window_size: i + window_size + 1] if word.split(' ')[0].lower() not in ignored]))                    
-                else:
-                    dataset.append((ner, [word.split('\t')[0].lower() for word in words[i - window_size: i + window_size + 1]]))
+                # if with_subs:
+                #     dataset.append((ner, [(w.split('\t')[0].lower(), w.split('\t')[0].lower()[:sub_word_size], w.split('\t')[0].lower()[-sub_word_size:]) for w in words[i - window_size: i + window_size + 1] if w.split(' ')[0].lower() not in ignored]))
+                # else:
+                dataset.append((ner, [w.split('\t')[0].lower() for w in words[i - window_size: i + window_size + 1]]))
 
                 # keep track of word and index
                 if word not in word2index:
@@ -62,17 +64,17 @@ def parse_NER(file_path, window_size, with_subs=False, sub_word_size=3):
                     index2word[word_index] = word
                     word_index += 1
                     
-                    if with_subs:
-                        prefix = word[:sub_word_size]
-                        suffix = word[-sub_word_size:]
-                        if prefix not in word2index:
-                            word2index[prefix] = word_index
-                            index2word[word_index + 1] = prefix
-                            word_index += 1
-                        if suffix not in word2index:
-                            word2index[suffix] = word_index
-                            index2word[word_index + 2] = suffix
-                            word_index += 1
+                    # if with_subs:
+                    #     prefix = word[:sub_word_size]
+                    #     suffix = word[-sub_word_size:]
+                    #     if prefix not in word2index:
+                    #         word2index[prefix] = word_index
+                    #         index2word[word_index + 1] = prefix
+                    #         word_index += 1
+                    #     if suffix not in word2index:
+                    #         word2index[suffix] = word_index
+                    #         index2word[word_index + 2] = suffix
+                    #         word_index += 1
 
                 # keep track of label and index
                 if ner not in label2index:
@@ -83,10 +85,11 @@ def parse_NER(file_path, window_size, with_subs=False, sub_word_size=3):
     return dataset, word2index, index2word, label2index, index2label
 
 
-def parse_POS(file_path, window_size, with_subs=False, sub_word_size=3):
+# def parse_POS(file_path, window_size, with_subs=False, sub_word_size=3):
+def parse_POS(file_path, window_size):
     # initialize dictionaries
-    word2index = {'<S>': 0, '<E>': 1, 'UUUNKKK': 2}
-    index2word = {0: '<S>', 1: '<E>', 2: 'UUUNKKK'}
+    word2index = {'<s>': 0, '<e>': 1, 'UUUNKKK': 2}
+    index2word = {0: '<s>', 1: '<e>', 2: 'UUUNKKK'}
     label2index = {'<START>': 0, '<END>': 1, '<UNSEEN>': 2}
     index2label = {0: '<START>', 1: '<END>', 2: '<UNSEEN>'}
 
@@ -102,38 +105,39 @@ def parse_POS(file_path, window_size, with_subs=False, sub_word_size=3):
             if sentence == '' or sentence == '\n':
                 continue
             # add special words of start and end of sentence with special labels (<S> = START, <E> = END)
-            sentence = '<S> START\n' * window_size + sentence + '\n<E> END' * window_size
+            sentence = '<s> START\n' * window_size + sentence + '\n<e> END' * window_size
             words = sentence.split('\n')
 
             # go over the words (not including the start and end words)
             for i in range(window_size, len(words) - window_size):
                 # for each word split into word and label
                 word, pos = words[i].split(' ')
+                word = word.lower()
 
                 # insert to the dataset a tuple of label and 5 words when the label is of the middle word
-                if with_subs:
-                    dataset.append((pos, [(word.split(' ')[0].lower(), word.split(' ')[0].lower()[:sub_word_size], word.split(' ')[0].lower()[-sub_word_size:]) for word in words[i - window_size: i + window_size + 1]]))                    
-                else:
-                    dataset.append((pos, [word.split(' ')[0].lower() for word in words[i - window_size: i + window_size + 1]]))
+                # if with_subs:
+                #     dataset.append((pos, [(w.split(' ')[0].lower(), w.split(' ')[0].lower()[:sub_word_size], w.split(' ')[0].lower()[-sub_word_size:]) for w in words[i - window_size: i + window_size + 1]]))
+                # else:
+                dataset.append((pos, [w.split(' ')[0].lower() for w in words[i - window_size: i + window_size + 1]]))
                 # keep track of word and index
                 if word not in word2index:
                     word2index[word] = word_index
                     index2word[word_index] = word
                     word_index += 1
-                    
-                    if with_subs:
-                        prefix = word[:sub_word_size]
-                        suffix = word[-sub_word_size:]
 
-                        if prefix not in word2index:
-                            word2index[prefix] = word_index
-                            index2word[word_index + 1] = prefix
-                            word_index += 1
-
-                        if suffix not in word2index:
-                            word2index[suffix] = word_index
-                            index2word[word_index + 2] = suffix
-                            word_index += 1
+                    # if with_subs:
+                    #     prefix = word[:sub_word_size]
+                    #     suffix = word[-sub_word_size:]
+                    #
+                    #     if prefix not in word2index:
+                    #         word2index[prefix] = word_index
+                    #         index2word[word_index + 1] = prefix
+                    #         word_index += 1
+                    #
+                    #     if suffix not in word2index:
+                    #         word2index[suffix] = word_index
+                    #         index2word[word_index + 2] = suffix
+                    #         word_index += 1
 
                 # keep track of label and index
                 if pos not in label2index:
@@ -142,6 +146,7 @@ def parse_POS(file_path, window_size, with_subs=False, sub_word_size=3):
                     label_index += 1
 
     return dataset, word2index, index2word, label2index, index2label
+
 
 def check_number(word, vocab):
     # word is a number (positive, negative, whole, float)
@@ -180,55 +185,25 @@ def convert_dataset_to_index(dataset, word2index, label2index, pretrained=False)
     return dataset
 
 
-def convert_to_sub_words(word2index):
+def convert_to_sub_words(word2index, sub_word_size=3):
     prefix_dict = dict()
     suffix_dict = dict()
 
-    for word, index in word2index.items():
-        prefix = word[:3]
-        suffix = word[-3:]
+    prefix_idx = 0
+    suffix_idx = 0
 
-        # if prefix not in prefix_dict:
-        prefix_dict[prefix] = index
-        # if suffix not in suffix_dict:
-        suffix_dict[suffix] = index
+    for word, index in word2index.items():
+        prefix = word[:sub_word_size]
+        suffix = word[-sub_word_size:]
+
+        if prefix not in prefix_dict:
+            prefix_dict[prefix] = prefix_idx
+            prefix_idx += 1
+        if suffix not in suffix_dict:
+            suffix_dict[suffix] = suffix_idx
+            suffix_idx += 1
 
     return prefix_dict, suffix_dict
-
-# def convert_to_sub_words(word2index, index2word):
-#     new_word2index = dict()
-#     new_index2word = dict()
-#
-#     for word, index in word2index.items():
-#         # get prefix and suffix (with indices)
-#         curr_word2index, curr_index2word = get_suffix_and_prefix(word, len(new_word2index))
-#
-#         # update word2index and index2word
-#         new_word2index.update(curr_word2index)
-#         new_index2word.update(curr_index2word)
-#
-#     return new_word2index, new_index2word
-#
-#
-# def get_suffix_and_prefix(word, word_index, sub_word_size=3):
-#     words2index = dict()
-#     index2words = dict()
-#
-#     words2index[word] = word_index
-#     index2words[word_index] = word
-#
-#     if len(word) > sub_word_size:
-#         # get the suffix and prefix of the word
-#         prefix = word[:sub_word_size]
-#         suffix = word[-sub_word_size:]
-#
-#         words2index[prefix] = word_index + 1
-#         index2words[word_index + 1] = prefix
-#
-#         words2index[suffix] = word_index + 2
-#         index2words[word_index + 2] = suffix
-#
-#     return words2index, index2words
 
 
 def parse_test_file(file_path, window_size):
@@ -242,13 +217,13 @@ def parse_test_file(file_path, window_size):
             if sentence == '' or sentence == '\n':
                 continue
             # add special words of start and end of sentence with special labels (<S> = START, <E> = END)
-            sentence = '<S>\n' * window_size + sentence + '\n<E>' * window_size
+            sentence = '<s>\n' * window_size + sentence + '\n<e>' * window_size
             words = sentence.split('\n')
 
             # go over the words (not including the start and end words)
             for i in range(window_size, len(words) - window_size):
                 # insert to the dataset a tuple of label and 5 words when the label is of the middle word
-                dataset.append(words[i - window_size: i + window_size + 1])
+                dataset.append(list(word.lower() for word in words[i - window_size: i + window_size + 1]))
 
     return dataset
 

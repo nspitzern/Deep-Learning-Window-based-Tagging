@@ -192,7 +192,7 @@ def convert_dataset_to_index(dataset, word2index, label2index, prefix2index, suf
             prefix.append(prefix2index[word[:3]])
             suffix.append(suffix2index[word[-3:]])
             # convert word to index. if the word was not seen - convert to unseen letter
-            dataset[i][1][j] = word2index[words[j]]
+            dataset[i][1][j] = word2index[word]
         # change the tag to index
         dataset[i] = list(dataset[i])
         dataset[i][0] = label2index.get(pos, label2index['<UNSEEN>'])

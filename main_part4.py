@@ -6,12 +6,12 @@ from tagger3 import Tagger3Model, train_model, predict, convert_dataset_to_index
 
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "5"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 
 if __name__ == '__main__':
     is_pretrained = False
     pos_train_set, word2index, index2word, label2index, index2label = utils.parse_POS('./pos/train', window_size=2)
-    prefix2index, suffix2index = utils.convert_to_sub_words(word2index)
+    prefix2index, suffix2index = utils.convert_to_sub_words(word2index, 3)
     pos_train_set = convert_dataset_to_index(pos_train_set, word2index, label2index, prefix2index, suffix2index)
 
     pos_dev_set, _, _, _, _ = utils.parse_POS('./pos/dev', window_size=2)
