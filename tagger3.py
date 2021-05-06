@@ -50,7 +50,7 @@ def train_model(train_set, dev_set, model,  n_epochs, lr, device, index2word, wo
     model.to(device)
     model.train()
 
-    optimizer = optim.Adam(params=model.parameters(), lr=lr, weight_decay=1e-4)
+    optimizer = optim.Adam(params=model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
 
     train_losses = []

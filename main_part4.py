@@ -10,7 +10,7 @@ import os
 # os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 
 if __name__ == '__main__':
-    is_pretrained = True
+    is_pretrained = False
 
     pos_train_set, word2index, index2word, label2index, index2label = utils.parse_POS('./pos/train', window_size=2)
 
@@ -23,7 +23,9 @@ if __name__ == '__main__':
     pos_dev_set, _, _, _, _ = utils.parse_POS('./pos/dev', window_size=2)
     pos_dev_set = convert_dataset_to_index(pos_dev_set, word2index, label2index, prefix2index, suffix2index, pretrained=is_pretrained)
 
-    pos_test_set = utils.parse_test_file('./pos/test', window_size=2)
+    # pos_test_set = utils.parse_test_file('./pos/test', window_size=2)
+    # pos_test_set = convert_dataset_to_index(pos_test_set, word2index, label2index, prefix2index, suffix2index,
+    #                                        pretrained=is_pretrained, is_test=True)
 
     # ner_train_set, word2index, index2word, label2index, index2label = utils.parse_NER('./ner/train', window_size=2)
     #
@@ -100,8 +102,8 @@ if __name__ == '__main__':
     #
     # predictions = predict(test_data, model, device, index2label)
     #
-    # utils.export_predictions(predictions, 'test4.ner')
-    # # utils.export_predictions(predictions, 'test4.pos')
+    # # utils.export_predictions(predictions, 'test4.ner')
+    # utils.export_predictions(predictions, 'test4.pos')
 
 
 
