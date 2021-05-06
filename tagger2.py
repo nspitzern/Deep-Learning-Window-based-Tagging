@@ -3,10 +3,9 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
-from torch.optim.lr_scheduler import ExponentialLR, StepLR
 import numpy as np
 
-from utils import save_model, draw_graphs, create_word_vec_dict
+from utils import save_model, draw_graphs
 
 
 class Tagger2Model(nn.Module):

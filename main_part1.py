@@ -59,14 +59,13 @@ if __name__ == '__main__':
 
     model = tagger1.Tagger1Model(vocab_size, embed_size, num_words, hidden_dim, out_dim)
 
-    tagger1.train_model(train_data, dev_data, model, n_epochs, lr, device, index2label, is_pos)
+    # tagger1.train_model(train_data, dev_data, model, n_epochs, lr, device, index2label, is_pos)
 
-    # path = './pos results part 1'
+    path = './pos results part 1'
 
     # model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history = utils.load_model(
-    #     f'{path}/model.path', f'{path}/train_loss_history.path', f'{path}/train_accuracy_history.path',
-    #     f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path',
-    #     vocab_size, embed_size, num_words, hidden_dim, out_dim
+    #     model, f'{path}/model.path', f'{path}/train_loss_history.path', f'{path}/train_accuracy_history.path',
+    #     f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path'
     # )
 
     for i in range(len(pos_test_set)):
