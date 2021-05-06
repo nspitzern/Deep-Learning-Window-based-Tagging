@@ -22,7 +22,6 @@ def create_word_vec_dict():
     return words2vecs, words2inx
 
 
-# def parse_NER(file_path, window_size, with_subs=False, sub_word_size=3):
 def parse_NER(file_path, window_size):
     # initialize dictionaries
     word2index = {'<s>': 0, '<e>': 1, 'UUUNKKK': 2}
@@ -85,7 +84,6 @@ def parse_NER(file_path, window_size):
     return dataset, word2index, index2word, label2index, index2label
 
 
-# def parse_POS(file_path, window_size, with_subs=False, sub_word_size=3):
 def parse_POS(file_path, window_size):
     # initialize dictionaries
     word2index = {'<s>': 0, '<e>': 1, 'UUUNKKK': 2}
@@ -242,7 +240,7 @@ def save_model(model, train_loss_history, train_accuracy_history, dev_loss_histo
 
 
 def load_model(model, model_path, train_loss_history_path, train_accuracy_history_path, dev_loss_history_path, dev_accuracy_history_path):
-    model = model.load_state_dict(torch.load(model_path))
+    model.load_state_dict(torch.load(model_path))
     train_loss_history = torch.load(train_loss_history_path)
     train_accuracy_history = torch.load(train_accuracy_history_path)
     dev_loss_history = torch.load(dev_loss_history_path)
