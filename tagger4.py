@@ -6,23 +6,18 @@ from utils import save_model, draw_graphs, check_number
 
 
 class Tagger4Model(nn.Module):
-    def __init__(self, vocab_size, embed_size, c_embed_size, num_words, hidden_dim, out_dim, prefix_size, suffix_size, is_pretrained=False, embeddings=None):
+    def __init__(self, vocab_size, embed_size, c_embed_size, num_words, hidden_dim, out_dim, chars_size, is_pretrained=False, embeddings=None):
         super(Tagger4Model, self).__init__()
         self.num_words = num_words
         self.embed_size = embed_size
         self.c_embd_size = c_embed_size
         
-        self.c_embedding_layer = nn.Embedding(vocab_size, c_embed_size)
-        
-        # Convolution layer for chars embedding
-        self.conv = nn.Conv1d(self.embed_size, 30, kernel_size=2)
+        self.char_embed_layer = nn.Embedding(chars_size, c_embed_size)
+        self.conv = nn.Conv1d(self.embed_size, num_words * embed_size, kernel_size=3, stride=1, padding=2)
 
         self.embedding_layer = nn.Embedding(vocab_size, embed_size)
         if is_pretrained:
             self.embedding_layer.weight.data.copy_(torch.from_numpy(embeddings).float())
-
-        self.prefix_embed_layer = nn.Embedding(prefix_size, embed_size)
-        self.suffix_embed_layer = nn.Embedding(suffix_size, embed_size)
 
         self.layer1 = nn.Linear(num_words * embed_size, hidden_dim)
         self.layer2 = nn.Linear(hidden_dim, out_dim)
@@ -30,21 +25,16 @@ class Tagger4Model(nn.Module):
 
         self.softmax = nn.LogSoftmax(dim=-1)
 
-    def forward(self, words_idxs, prefix_idxs, suffix_idxs):
+    def forward(self, words_idxs, chars_idxs):
         
-        # reshape vectors for char embedding
+        # get the embedded vectors of each char and concat to a large vector
+        chars = self.char_embed_layer(chars_idxs).view(-1, self.num_words * self.embed_size)
+        chars = self.conv(chars)
         
-
         # get the embedded vectors of each word and concat to a large vector
         x = self.embedding_layer(words_idxs).view(-1, self.num_words * self.embed_size)
 
-        # get the embedded vectors of each word and concat to a large vector
-        prefix = self.prefix_embed_layer(prefix_idxs).view(-1, self.num_words * self.embed_size)
-
-        # get the embedded vectors of each word and concat to a large vector
-        suffix = self.suffix_embed_layer(suffix_idxs).view(-1, self.num_words * self.embed_size)
-
-        x = prefix + x + suffix
+        x = chars + x
 
         x = torch.tanh(self.layer1(x))
         x = self.dropout(x)
@@ -190,7 +180,7 @@ def predict(test_set, model, device, index2label):
     return predicted_labels
 
 
-def convert_dataset_to_index(dataset, word2index, label2index, prefix2index, suffix2index, sub_word_size=3, pretrained=False, is_test=False):
+def convert_dataset_to_index(dataset, word2index, label2index, char2index, pretrained=False, is_test=False):
     for i in range(len(dataset)):
         # get current sample
         if not is_test:
@@ -198,17 +188,16 @@ def convert_dataset_to_index(dataset, word2index, label2index, prefix2index, suf
         else:
             words = dataset[i]
 
-        suffix = []
-        prefix = []
+        chars = []
         # go over the words in the window
         for j in range(len(words)):
             if pretrained:
                 words[j] = check_number(words[j], word2index.keys())
             # for each word, check if word is in the training set. if not change to unknown
             word = words[j] if words[j] in word2index else 'UUUNKKK'
-            # get hte prefix and suffix of the word
-            prefix.append(prefix2index[word[:sub_word_size]])
-            suffix.append(suffix2index[word[-sub_word_size:]])
+            # get all chars of the word
+            for k in range(len(word)):
+                chars.append(char2index[word[k]])
             # convert word to index. if the word was not seen - convert to unseen letter
             if not is_test:
                 dataset[i][1][j] = word2index[word]
@@ -221,9 +210,8 @@ def convert_dataset_to_index(dataset, word2index, label2index, prefix2index, suf
             dataset[i][0] = label2index.get(pos, label2index['<UNSEEN>'])
         else:
             dataset[i] = [dataset[i]]
-        # add the prefixes and suffixes (indices) of the words in the window
-        dataset[i].append(prefix)
-        dataset[i].append(suffix)
+        # add chars of the words in the window
+        dataset[i].append(chars)
         dataset[i] = tuple(dataset[i])
 
     return dataset

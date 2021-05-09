@@ -14,17 +14,18 @@ def pos(is_pretrained):
     if is_pretrained:
         _, word2index = utils.create_word_vec_dict()
 
-    prefix2index, suffix2index = utils.convert_to_sub_words(word2index, 3)
-    pos_train_set = convert_dataset_to_index(pos_train_set, word2index, label2index, prefix2index, suffix2index,
+    char2index = utils.create_char_inx_dict()
+    pos_train_set = convert_dataset_to_index(pos_train_set, word2index, label2index, char2index,
                                              pretrained=is_pretrained)
 
     pos_dev_set, _, _, _, _ = utils.parse_POS('./pos/dev', window_size=2)
-    pos_dev_set = convert_dataset_to_index(pos_dev_set, word2index, label2index, prefix2index, suffix2index,
+    pos_dev_set = convert_dataset_to_index(pos_dev_set, word2index, label2index, char2index,
                                            pretrained=is_pretrained)
 
     pos_test_set = utils.parse_test_file('./pos/test', window_size=2)
-    pos_test_set = convert_dataset_to_index(pos_test_set, word2index, label2index, prefix2index, suffix2index,
+    pos_test_set = convert_dataset_to_index(pos_test_set, word2index, label2index, char2index,
                                            pretrained=is_pretrained, is_test=True)
+    
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     is_pos = True
@@ -32,6 +33,7 @@ def pos(is_pretrained):
     # define model's parameters
     vocab_size = len(word2index.keys()) - 1
     embed_size = 50
+    c_embed_size = 30
     num_words = 5
     out_dim = len(label2index.keys())
 
@@ -63,8 +65,8 @@ def pos(is_pretrained):
     if is_pretrained:
         embeddings = np.loadtxt('pretrained vectors.txt')
 
-    model = Tagger4Model(vocab_size, embed_size, num_words, hidden_dim, out_dim, len(prefix2index.keys()),
-                         len(suffix2index.keys()), is_pretrained=is_pretrained, embeddings=embeddings)
+    model = Tagger4Model(vocab_size, embed_size, c_embed_size, num_words, hidden_dim, out_dim, len(char2index.keys()),
+                         is_pretrained=is_pretrained, embeddings=embeddings)
 
     train_model(train_data, dev_data, model, n_epochs, lr, device, index2word, word2index, index2label, is_pos)
 
@@ -87,23 +89,24 @@ def ner(is_pretrained):
 
     if is_pretrained:
         _, word2index = utils.create_word_vec_dict()
-
-    prefix2index, suffix2index = utils.convert_to_sub_words(word2index, 3)
-    ner_train_set = convert_dataset_to_index(ner_train_set, word2index, label2index, prefix2index, suffix2index, pretrained=is_pretrained)
+        
+    char2index = utils.create_char_inx_dict()
+    ner_train_set = convert_dataset_to_index(ner_train_set, word2index, label2index, char2index, pretrained=is_pretrained)
 
     ner_dev_set, _, _, _, _ = utils.parse_NER('./ner/dev', window_size=2)
-    ner_dev_set = convert_dataset_to_index(ner_dev_set, word2index, label2index, prefix2index, suffix2index, pretrained=is_pretrained)
+    ner_dev_set = convert_dataset_to_index(ner_dev_set, word2index, label2index, char2index, pretrained=is_pretrained)
 
     ner_test_set = utils.parse_test_file('./ner/test', window_size=2)
-    ner_test_set = convert_dataset_to_index(ner_test_set, word2index, label2index, prefix2index, suffix2index,
+    ner_test_set = convert_dataset_to_index(ner_test_set, word2index, label2index, char2index,
                                            pretrained=is_pretrained, is_test=True)
-
+    
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     is_pos = False
 
     # define model's parameters
     vocab_size = len(word2index.keys()) - 1
     embed_size = 50
+    c_embed_size = 30
     num_words = 5
     out_dim = len(label2index.keys())
 
@@ -135,8 +138,8 @@ def ner(is_pretrained):
     if is_pretrained:
         embeddings = np.loadtxt('pretrained vectors.txt')
 
-    model = Tagger4Model(vocab_size, embed_size, num_words, hidden_dim, out_dim, len(prefix2index.keys()),
-                         len(suffix2index.keys()), is_pretrained=is_pretrained, embeddings=embeddings)
+    model = Tagger4Model(vocab_size, embed_size, c_embed_size, num_words, hidden_dim, out_dim, len(char2index.keys()),
+                         is_pretrained=is_pretrained, embeddings=embeddings)
 
     train_model(train_data, dev_data, model, n_epochs, lr, device, index2word, word2index, index2label, is_pos)
 
