@@ -1,8 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import matplotlib.pyplot as plt
-import numpy as np
 
 from utils import save_model, draw_graphs, check_number
 
@@ -50,7 +48,7 @@ def train_model(train_set, dev_set, model,  n_epochs, lr, device, index2word, wo
     model.to(device)
     model.train()
 
-    optimizer = optim.Adam(params=model.parameters(), lr=lr)
+    optimizer = optim.Adam(params=model.parameters(), lr=lr, weight_decay=1e-4)
     criterion = nn.CrossEntropyLoss()
 
     train_losses = []
@@ -183,7 +181,7 @@ def predict(test_set, model, device, index2label):
     return predicted_labels
 
 
-def convert_dataset_to_index(dataset, word2index, label2index, prefix2index, suffix2index, pretrained=False, is_test=False):
+def convert_dataset_to_index(dataset, word2index, label2index, prefix2index, suffix2index, sub_word_size=3, pretrained=False, is_test=False):
     for i in range(len(dataset)):
         # get current sample
         if not is_test:
@@ -200,8 +198,8 @@ def convert_dataset_to_index(dataset, word2index, label2index, prefix2index, suf
             # for each word, check if word is in the training set. if not change to unknown
             word = words[j] if words[j] in word2index else 'UUUNKKK'
             # get hte prefix and suffix of the word
-            prefix.append(prefix2index[word[:3]])
-            suffix.append(suffix2index[word[-3:]])
+            prefix.append(prefix2index[word[:sub_word_size]])
+            suffix.append(suffix2index[word[-sub_word_size:]])
             # convert word to index. if the word was not seen - convert to unseen letter
             if not is_test:
                 dataset[i][1][j] = word2index[word]
