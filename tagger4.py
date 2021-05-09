@@ -6,10 +6,16 @@ from utils import save_model, draw_graphs, check_number
 
 
 class Tagger4Model(nn.Module):
-    def __init__(self, vocab_size, embed_size, num_words, hidden_dim, out_dim, prefix_size, suffix_size, is_pretrained=False, embeddings=None):
+    def __init__(self, vocab_size, embed_size, c_embed_size, num_words, hidden_dim, out_dim, prefix_size, suffix_size, is_pretrained=False, embeddings=None):
         super(Tagger4Model, self).__init__()
         self.num_words = num_words
         self.embed_size = embed_size
+        self.c_embd_size = c_embed_size
+        
+        self.c_embedding_layer = nn.Embedding(vocab_size, c_embed_size)
+        
+        # Convolution layer for chars embedding
+        self.conv = nn.Conv1d(self.embed_size, 30, kernel_size=2)
 
         self.embedding_layer = nn.Embedding(vocab_size, embed_size)
         if is_pretrained:
@@ -25,6 +31,9 @@ class Tagger4Model(nn.Module):
         self.softmax = nn.LogSoftmax(dim=-1)
 
     def forward(self, words_idxs, prefix_idxs, suffix_idxs):
+        
+        # reshape vectors for char embedding
+        
 
         # get the embedded vectors of each word and concat to a large vector
         x = self.embedding_layer(words_idxs).view(-1, self.num_words * self.embed_size)
