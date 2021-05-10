@@ -10,13 +10,21 @@
             "request": "launch",
             "program": "main_part3.py",
             "console": "integratedTerminal"
-        }
+        },
         {
             "name": "part4",
             "type": "python",
             "request": "launch",
             "program": "main_part4.py",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "part5",
+            "type": "python",
+            "request": "launch",
+            "program": "main_part5.py",
+            "console": "integratedTerminal",
+            "args": ["pos", "True"]
         }
     ]
 }

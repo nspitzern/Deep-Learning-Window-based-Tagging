@@ -11,10 +11,10 @@ from tagger4 import Tagger4Model, train_model, predict, convert_dataset_to_index
 def pos(is_pretrained):
     pos_train_set, word2index, index2word, label2index, index2label = utils.parse_POS('./pos/train', window_size=2)
 
-    if is_pretrained:
-        _, word2index = utils.create_word_vec_dict()
+    #if is_pretrained:
+    #    _, word2index = utils.create_word_vec_dict()
 
-    char2index = utils.create_char_inx_dict()
+    char2index, index2char = utils.create_char_inx_dict()
     pos_train_set = convert_dataset_to_index(pos_train_set, word2index, label2index, char2index,
                                              pretrained=is_pretrained)
 
