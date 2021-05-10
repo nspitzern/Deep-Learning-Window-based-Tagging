@@ -6,14 +6,15 @@ from utils import save_model, draw_graphs, check_number
 
 
 class Tagger4Model(nn.Module):
-    def __init__(self, vocab_size, embed_size, c_embed_size, num_words, hidden_dim, out_dim, chars_size, is_pretrained=False, embeddings=None):
+    def __init__(self, vocab_size, embed_size, c_embed_size, num_words, hidden_dim, out_dim, chars_size, word_size, is_pretrained=False, embeddings=None):
         super(Tagger4Model, self).__init__()
         self.num_words = num_words
         self.embed_size = embed_size
         self.c_embd_size = c_embed_size
+        self.word_size = word_size
         
-        self.char_embed_layer = nn.Embedding(chars_size, c_embed_size)
-        self.conv = nn.Conv1d(self.embed_size, num_words * embed_size, kernel_size=3, stride=1, padding=2)
+        self.char_embed_layer = nn.Embedding(chars_size , c_embed_size)
+        self.conv = nn.Conv1d(num_words * c_embed_size, c_embed_size, kernel_size=3, stride=1, padding=2)
 
         self.embedding_layer = nn.Embedding(vocab_size, embed_size)
         if is_pretrained:
@@ -28,6 +29,7 @@ class Tagger4Model(nn.Module):
     def forward(self, words_idxs, chars_idxs):
         
         # get the embedded vectors of each char and concat to a large vector
+        chars_idxs = chars_idxs.view(-1, self.word_size * self.num_words)
         chars = self.char_embed_layer(chars_idxs).view(-1, self.num_words * self.embed_size)
         chars = self.conv(chars)
         
@@ -78,21 +80,19 @@ def train_model(train_set, dev_set, model,  n_epochs, lr, device, index2word, wo
 def train(model, train_set, optimizer, criterion, device):
     running_loss = 0
     for i, data in enumerate(train_set):
-        labels_batch, words_batch, prefix_idxs, suffix_idxs = data
+        labels_batch, words_batch, chars_idxs = data
 
         words_batch = torch.stack(words_batch, dim=1)
-        prefix_idxs = torch.stack(prefix_idxs, dim=1)
-        suffix_idxs = torch.stack(suffix_idxs, dim=1)
+        chars_idxs = torch.stack(chars_idxs, dim=1)
 
         words_batch = words_batch.to(device)
         labels_batch = labels_batch.to(device)
-        prefix_idxs = prefix_idxs.to(device)
-        suffix_idxs = suffix_idxs.to(device)
+        chars_idxs = chars_idxs.to(device)
 
         optimizer.zero_grad()
 
         # predict
-        outputs = model(words_batch, prefix_idxs, suffix_idxs)
+        outputs = model(words_batch, chars_idxs)
 
         loss = criterion(outputs.squeeze(), labels_batch)
         loss.backward()
@@ -180,7 +180,7 @@ def predict(test_set, model, device, index2label):
     return predicted_labels
 
 
-def convert_dataset_to_index(dataset, word2index, label2index, char2index, pretrained=False, is_test=False):
+def convert_dataset_to_index(dataset, word2index, label2index, char2index, word_size, pretrained=False, is_test=False):
     for i in range(len(dataset)):
         # get current sample
         if not is_test:
@@ -196,9 +196,9 @@ def convert_dataset_to_index(dataset, word2index, label2index, char2index, pretr
             # for each word, check if word is in the training set. if not change to unknown
             word = words[j] if words[j] in word2index else 'UUUNKKK'
             # get all chars of the word
-            chars = []
+            chars = torch.zeros(word_size, dtype=torch.int64)
             for k in range(len(word)):
-                chars.append(char2index.get(word[k], char2index['<UNSEEN>']))
+                chars[k] = char2index.get(word[k], char2index['<UNSEEN>'])
             word_chars.append(chars)
             # convert word to index. if the word was not seen - convert to unseen letter
             if not is_test:

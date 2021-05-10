@@ -11,20 +11,21 @@ from tagger4 import Tagger4Model, train_model, predict, convert_dataset_to_index
 def pos(is_pretrained):
     pos_train_set, word2index, index2word, label2index, index2label = utils.parse_POS('./pos/train', window_size=2)
 
-    #if is_pretrained:
-    #    _, word2index = utils.create_word_vec_dict()
+    if is_pretrained:
+        _, word2index = utils.create_word_vec_dict()
 
     char2index, index2char = utils.create_char_inx_dict()
+    word_size = 30
     pos_train_set = convert_dataset_to_index(pos_train_set, word2index, label2index, char2index,
-                                             pretrained=is_pretrained)
+                                             word_size, pretrained=is_pretrained)
 
     pos_dev_set, _, _, _, _ = utils.parse_POS('./pos/dev', window_size=2)
     pos_dev_set = convert_dataset_to_index(pos_dev_set, word2index, label2index, char2index,
-                                           pretrained=is_pretrained)
+                                           word_size, pretrained=is_pretrained)
 
     pos_test_set = utils.parse_test_file('./pos/test', window_size=2)
     pos_test_set = convert_dataset_to_index(pos_test_set, word2index, label2index, char2index,
-                                           pretrained=is_pretrained, is_test=True)
+                                           word_size, pretrained=is_pretrained, is_test=True)
     
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -66,7 +67,7 @@ def pos(is_pretrained):
         embeddings = np.loadtxt('pretrained vectors.txt')
 
     model = Tagger4Model(vocab_size, embed_size, c_embed_size, num_words, hidden_dim, out_dim, len(char2index.keys()),
-                         is_pretrained=is_pretrained, embeddings=embeddings)
+                         word_size, is_pretrained=is_pretrained, embeddings=embeddings)
 
     train_model(train_data, dev_data, model, n_epochs, lr, device, index2word, word2index, index2label, is_pos)
 

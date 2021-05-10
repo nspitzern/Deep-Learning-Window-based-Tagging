@@ -9,7 +9,8 @@
             "type": "python",
             "request": "launch",
             "program": "main_part3.py",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "args": ["ner", "True"]
         },
         {
             "name": "part4",
