@@ -177,6 +177,16 @@ def convert_to_sub_words(word2index, sub_word_size=3):
             suffix_dict[suffix] = suffix_idx
             suffix_idx += 1
 
+        if prefix not in prefix_dict:
+            prefix_dict[prefix] = 1
+        else:
+            prefix_dict[prefix] += 1
+
+        if suffix not in suffix_dict:
+            suffix_dict[suffix] = 1
+        else:
+            suffix_dict[suffix] += 1
+
     return prefix_dict, suffix_dict
 
 
