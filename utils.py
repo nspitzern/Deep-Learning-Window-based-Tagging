@@ -25,11 +25,12 @@ def create_word_vec_dict():
 def create_char_inx_dict():
     alphabet = 'abcdefghijklmnopqrstuvwxyz'
 
-    char2index = dict()
+    char2index = {'<s>': 0, '<e>': 1, '<UNSEEN>': 2}
+    index2char = {0: '<s>', 1: '<e>', 2: '<UNSEEN>'}
     for inx, char in enumerate(alphabet):
-        char2index[char] = inx
+        char2index[char] = inx + 3
         
-    return char2index
+    return char2index, index2char
 
 
 def parse_NER(file_path, window_size):

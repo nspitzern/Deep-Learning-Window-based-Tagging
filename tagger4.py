@@ -48,7 +48,7 @@ def train_model(train_set, dev_set, model,  n_epochs, lr, device, index2word, wo
     model.train()
 
     optimizer = optim.Adam(params=model.parameters(), lr=lr, weight_decay=1e-4)
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.NLLLoss()
 
     train_losses = []
     train_accuracy = []
@@ -188,7 +188,7 @@ def convert_dataset_to_index(dataset, word2index, label2index, char2index, pretr
         else:
             words = dataset[i]
 
-        chars = []
+        word_chars = []
         # go over the words in the window
         for j in range(len(words)):
             if pretrained:
@@ -196,8 +196,10 @@ def convert_dataset_to_index(dataset, word2index, label2index, char2index, pretr
             # for each word, check if word is in the training set. if not change to unknown
             word = words[j] if words[j] in word2index else 'UUUNKKK'
             # get all chars of the word
+            chars = []
             for k in range(len(word)):
-                chars.append(char2index[word[k]])
+                chars.append(char2index.get(word[k], char2index['<UNSEEN>']))
+            word_chars.append(chars)
             # convert word to index. if the word was not seen - convert to unseen letter
             if not is_test:
                 dataset[i][1][j] = word2index[word]
@@ -211,7 +213,7 @@ def convert_dataset_to_index(dataset, word2index, label2index, char2index, pretr
         else:
             dataset[i] = [dataset[i]]
         # add chars of the words in the window
-        dataset[i].append(chars)
+        dataset[i].append(word_chars)
         dataset[i] = tuple(dataset[i])
 
     return dataset
