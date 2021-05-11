@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import numpy as np
 
-from utils import save_model, draw_graphs
+from utils import save_model, draw_graphs, check_number
 
 
 class Tagger2Model(nn.Module):
@@ -31,12 +31,12 @@ class Tagger2Model(nn.Module):
         return out
 
 
-def train_model(train_set, dev_set, model,  n_epochs, lr, device, index2label, is_pos=False):
+def train_model(train_set, dev_set, model, n_epochs, lr, device, index2word, word2index, index2label, is_pos=False):
     model.to(device)
     model.train()
 
     optimizer = optim.Adam(params=model.parameters(), lr=lr, weight_decay=1e-4)
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.NLLLoss()
 
     train_losses = []
     train_accuracy = []
@@ -138,20 +138,50 @@ def predict(test_set, model, device, index2label):
     predicted_labels = []
 
     for i, data in enumerate(test_set):
-        words_batch = data
-        words_batch = torch.stack(words_batch, dim=1)
-
-        words_batch = words_batch.to(device)
+        vecs_batch = data
+        vecs_batch = torch.stack(vecs_batch[0]).type(torch.FloatTensor)
+        #vecs_batch = vecs_batch.to(device)
 
         # predict
-        outputs = model(words_batch)
+        outputs = model(vecs_batch)
 
         # get the index of the label
         index = torch.argmax(outputs)
 
-        # ge the label from the index
+        # get the label from the index
         label = index2label.get(index.item(), 'UNSEEN')
 
         predicted_labels.append(label)
 
     return predicted_labels
+
+
+def convert_dataset_to_index(dataset, word2index, label2index, is_test=False):
+    for i in range(len(dataset)):
+        # get current sample
+        if not is_test:
+            pos, words = dataset[i]
+        else:
+            words = dataset[i]
+
+        # go over the words in the window
+        for j in range(len(words)):
+            words[j] = check_number(words[j], word2index.keys())
+            # for each word, check if word is in the training set. if not change to unknown
+            word = words[j] if words[j] in word2index else 'UUUNKKK'
+            # convert word to index. if the word was not seen - convert to unseen letter
+            if not is_test:
+                dataset[i][1][j] = word2index[word]
+            else:
+                dataset[i][j] = word2index[word]
+        # change the tag to index
+        dataset[i] = list(dataset[i])
+        dataset[i] = list(dataset[i])
+        if not is_test:
+            dataset[i][0] = label2index.get(pos, label2index['<UNSEEN>'])
+        else:
+            dataset[i] = [dataset[i]]
+        # add the prefixes and suffixes (indices) of the words in the window
+        dataset[i] = tuple(dataset[i])
+
+    return dataset

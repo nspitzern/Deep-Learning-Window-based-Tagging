@@ -4,7 +4,7 @@ import torch
 
 
 def create_word_vec_dict():
-    vecs = np.loadtxt("pretrained vectors.txt")
+    vecs = torch.from_numpy(np.loadtxt("pretrained vectors.txt"))
     with open("words.txt", 'r') as words_file:
         words = words_file.read().splitlines()
     words2vecs = {'<s>': torch.zeros(vecs.shape[1], dtype=torch.float), '<e>': torch.zeros(vecs.shape[1], dtype=torch.float)}
@@ -251,6 +251,8 @@ def draw_graphs(train_history, dev_history, n_epochs, plot_title, train_title, d
     ax1.plot(x, train_history)
     ax2.set_title(dev_title)
     ax2.plot(x, dev_history)
+    
+    plt.savefig(plot_title + '_' + str(n_epochs) + '_epochs_part3_pos.png')
 
     plt.show()
 
