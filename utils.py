@@ -22,11 +22,20 @@ def create_word_vec_dict():
     return words2vecs, words2inx
 
 
-def create_char_inx_dict():
-    alphabet = 'abcdefghijklmnopqrstuvwxyz'
+def get_pretrained_words():
+    with open('words.txt', 'r', encoding='utf-8') as f:
+        words = f.readlines()
+    words2index = {word.strip(): index for index, word in enumerate(words)}
+    index2words = {index: word.strip() for index, word in enumerate(words)}
+    return words2index, index2words
 
+
+def create_char_inx_dict():
     char2index = {'<s>': 0, '<e>': 1, '<UNSEEN>': 2}
     index2char = {0: '<s>', 1: '<e>', 2: '<UNSEEN>'}
+
+    alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*(){}[]:;"\',./?`~<>\|'
+
     for inx, char in enumerate(alphabet):
         char2index[char] = inx + 3
         
