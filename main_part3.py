@@ -30,7 +30,7 @@ def pos():
 
     if is_pos:
         lr = 1e-3
-        n_epochs = 5
+        n_epochs = 7
         batch_size_train = 32
         batch_size_dev = 32
         hidden_dim = 150
