@@ -29,8 +29,8 @@ def pos():
     out_dim = len(label2index.keys())
 
     if is_pos:
-        lr = 1e-3
-        n_epochs = 7
+        lr = 1e-4
+        n_epochs = 10
         batch_size_train = 32
         batch_size_dev = 32
         hidden_dim = 150
