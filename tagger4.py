@@ -15,14 +15,14 @@ class Tagger4Model(nn.Module):
         self.chars_size = chars_size
 
         self.char_embed_layer = nn.Embedding(total_chars_in_corpus, c_embed_size)
-        self.conv = nn.Conv1d(self.c_embed_size, self.c_embed_size * 5, kernel_size=3, stride=1, padding=1)
+        self.conv = nn.Conv1d(self.c_embed_size, self.c_embed_size, kernel_size=3, stride=1, padding=1)
         self.pooling = nn.MaxPool1d(self.chars_size)
 
         self.embedding_layer = nn.Embedding(vocab_size, embed_size)
         if is_pretrained:
             self.embedding_layer.weight.data.copy_(torch.from_numpy(embeddings).float())
 
-        self.layer1 = nn.Linear(num_words * embed_size + c_embed_size * 5, hidden_dim)
+        self.layer1 = nn.Linear(num_words * embed_size + c_embed_size, hidden_dim)
         self.layer2 = nn.Linear(hidden_dim, out_dim)
         self.dropout = nn.Dropout(0.5)
 
@@ -34,7 +34,7 @@ class Tagger4Model(nn.Module):
         chars = self.char_embed_layer(chars_idxs)
         chars = self.dropout(chars)
         chars = self.conv(chars)
-        chars = self.pooling(chars).view(-1, self.c_embed_size * 5)
+        chars = self.pooling(chars).view(-1, self.c_embed_size)
         
         # get the embedded vectors of each word and concat to a large vector
         x = self.embedding_layer(words_idxs).view(-1, self.num_words * self.embed_size)
