@@ -140,7 +140,7 @@ def predict(test_set, model, device, index2label):
     for i, data in enumerate(test_set):
         vecs_batch = data
         vecs_batch = torch.stack(vecs_batch[0]).type(torch.FloatTensor)
-        #vecs_batch = vecs_batch.to(device)
+        vecs_batch = vecs_batch.to(device)
 
         # predict
         outputs = model(vecs_batch)
