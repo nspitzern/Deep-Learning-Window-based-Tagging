@@ -1,0 +1,1 @@
+[15/15] train loss: 0.0029065137867185327, train accuracy: 85.982%, dev loss: 0.0052485973291635565, dev accuracy: 72.636%

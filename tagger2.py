@@ -1,18 +1,18 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torch.nn.functional as F
-import matplotlib.pyplot as plt
-import numpy as np
 
 from utils import save_model, draw_graphs, check_number
 
 
 class Tagger2Model(nn.Module):
-    def __init__(self, vocab_size, embed_size, num_words, hidden_dim, out_dim):
+    def __init__(self, vocab_size, embed_size, num_words, hidden_dim, out_dim, embeddings):
         super(Tagger2Model, self).__init__()
         self.num_words = num_words
         self.embed_size = embed_size
+        self.embedding_layer = nn.Embedding(vocab_size, embed_size)
+
+        self.embedding_layer.weight.data.copy_(torch.from_numpy(embeddings).float())
 
         self.layer1 = nn.Linear(num_words * embed_size, hidden_dim)
         self.layer2 = nn.Linear(hidden_dim, out_dim)
@@ -20,10 +20,8 @@ class Tagger2Model(nn.Module):
 
         self.softmax = nn.LogSoftmax(dim=-1)
 
-    def forward(self, vecs):
-        # get the embedded vectors of each word and concat to a large vector
-        x = vecs.view(-1, self.num_words * self.embed_size)
-
+    def forward(self, words_idxs):
+        x = self.embedding_layer(words_idxs).view(-1, self.num_words * self.embed_size)
         x = torch.tanh(self.layer1(x))
         x = self.dropout(x)
         out = self.softmax(self.layer2(x))
@@ -66,17 +64,17 @@ def train_model(train_set, dev_set, model, n_epochs, lr, device, index2word, wor
 def train(model, train_set, optimizer, criterion, device):
     running_loss = 0
     for i, data in enumerate(train_set):
-        labels_batch, vecs_batch = data
+        labels_batch, words_batch = data
 
-        vecs_batch = torch.stack(vecs_batch, dim=1).type(torch.FloatTensor)
+        words_batch = torch.stack(words_batch, dim=1)
 
-        vecs_batch = vecs_batch.to(device)
+        words_batch = words_batch.to(device)
         labels_batch = labels_batch.to(device)
 
         optimizer.zero_grad()
 
         # predict
-        outputs = model(vecs_batch)
+        outputs = model(words_batch)
 
         loss = criterion(outputs.squeeze(), labels_batch)
         loss.backward()
@@ -95,15 +93,14 @@ def evaluate(model, dev_set, criterion, device, index2label, is_pos):
     total = 0.0
     with torch.no_grad():
         for i, data in enumerate(dev_set):
-            labels_batch, vecs_batch = data
+            labels_batch, words_batch = data
 
-            vecs_batch = torch.stack(vecs_batch, dim=1).type(torch.FloatTensor)
+            words_batch = torch.stack(words_batch, dim=1)
 
-            vecs_batch = vecs_batch.to(device)
+            words_batch = words_batch.to(device)
             labels_batch = labels_batch.to(device)
 
-            # predict
-            outputs = model(vecs_batch)
+            outputs = model(words_batch)
 
             loss = criterion(outputs.squeeze(), labels_batch)
 
@@ -138,12 +135,12 @@ def predict(test_set, model, device, index2label):
     predicted_labels = []
 
     for i, data in enumerate(test_set):
-        vecs_batch = data
-        vecs_batch = torch.stack(vecs_batch[0]).type(torch.FloatTensor)
-        vecs_batch = vecs_batch.to(device)
+        words_batch = data
+        words_batch = torch.stack(words_batch)
+        words_batch = words_batch.to(device)
 
         # predict
-        outputs = model(vecs_batch)
+        outputs = model(words_batch)
 
         # get the index of the label
         index = torch.argmax(outputs)

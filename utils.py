@@ -7,10 +7,8 @@ def create_word_vec_dict():
     vecs = torch.from_numpy(np.loadtxt("pretrained vectors.txt"))
     with open("words.txt", 'r') as words_file:
         words = words_file.read().splitlines()
-    words2vecs = {'<s>': torch.zeros(vecs.shape[1], dtype=torch.float), '<e>': torch.zeros(vecs.shape[1], dtype=torch.float)}
-    words2inx = {'<s>': 0, '<e>': 1}
-    # words2vecs = {}
-    # words2inx = {}
+    words2vecs = {'<s>': torch.zeros(vecs.shape[1], dtype=torch.float), '</s>': torch.zeros(vecs.shape[1], dtype=torch.float)}
+    words2inx = {'<s>': 0, '</s>': 1}
     i, j = 0, len(words2vecs)
     for word in words:
         if word not in words2vecs:
@@ -31,8 +29,8 @@ def get_pretrained_words():
 
 
 def create_char_inx_dict():
-    char2index = {'<s>': 0, '<e>': 1, '<UNSEEN>': 2}
-    index2char = {0: '<s>', 1: '<e>', 2: '<UNSEEN>'}
+    char2index = {'<s>': 0, '</s>': 1, '<UNSEEN>': 2}
+    index2char = {0: '<s>', 1: '</s>', 2: '<UNSEEN>'}
 
     alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*(){}[]:;"\',./?`~<>\|'
 
@@ -44,8 +42,8 @@ def create_char_inx_dict():
 
 def parse_NER(file_path, window_size):
     # initialize dictionaries
-    word2index = {'<s>': 0, '<e>': 1, 'UUUNKKK': 2}
-    index2word = {0: '<s>', 1: '<e>', 2: 'UUUNKKK'}
+    word2index = {'<s>': 0, '</s>': 1, 'UUUNKKK': 2}
+    index2word = {0: '<s>', 1: '</s>', 2: 'UUUNKKK'}
     label2index = {'<START>': 0, '<END>': 1, '<UNSEEN>': 2}
     index2label = {0: '<START>', 1: '<END>', 2: '<UNSEEN>'}
 
@@ -56,13 +54,13 @@ def parse_NER(file_path, window_size):
 
         # split into sentences (separated by blank rows)
         sentences = f.read().split('\n\n')
-        ignored = ['<s>', '<e>', '-docstart-']
+        ignored = ['<s>', '</s>', '-docstart-']
 
         for sentence in sentences:
             if sentence == '' or sentence == '\n':
                 continue
-            # add special words of start and end of sentence with special labels (<S> = START, <E> = END)
-            sentence = '<s>\tSTART\n' * window_size + sentence + '\n<e>\tEND' * window_size
+            # add special words of start and end of sentence with special labels (<s> = START, </s> = END)
+            sentence = '<s>\tSTART\n' * window_size + sentence + '\n</s>\tEND' * window_size
             words = sentence.split('\n')
 
             # go over the words (not including the start and end words)
@@ -89,8 +87,8 @@ def parse_NER(file_path, window_size):
 
 def parse_POS(file_path, window_size):
     # initialize dictionaries
-    word2index = {'<s>': 0, '<e>': 1, 'UUUNKKK': 2}
-    index2word = {0: '<s>', 1: '<e>', 2: 'UUUNKKK'}
+    word2index = {'<s>': 0, '</s>': 1, 'UUUNKKK': 2}
+    index2word = {0: '<s>', 1: '</s>', 2: 'UUUNKKK'}
     label2index = {'<START>': 0, '<END>': 1, '<UNSEEN>': 2}
     index2label = {0: '<START>', 1: '<END>', 2: '<UNSEEN>'}
 
@@ -105,8 +103,8 @@ def parse_POS(file_path, window_size):
         for sentence in sentences:
             if sentence == '' or sentence == '\n':
                 continue
-            # add special words of start and end of sentence with special labels (<S> = START, <E> = END)
-            sentence = '<s> START\n' * window_size + sentence + '\n<e> END' * window_size
+            # add special words of start and end of sentence with special labels (<s> = START, </s> = END)
+            sentence = '<s> START\n' * window_size + sentence + '\n</s> END' * window_size
             words = sentence.split('\n')
 
             # go over the words (not including the start and end words)
@@ -209,8 +207,8 @@ def parse_test_file(file_path, window_size):
         for sentence in sentences:
             if sentence == '' or sentence == '\n':
                 continue
-            # add special words of start and end of sentence with special labels (<S> = START, <E> = END)
-            sentence = '<s>\n' * window_size + sentence + '\n<e>' * window_size
+            # add special words of start and end of sentence with special labels (<s> = START, </s> = END)
+            sentence = '<s>\n' * window_size + sentence + '\n</s>' * window_size
             words = sentence.split('\n')
 
             # go over the words (not including the start and end words)

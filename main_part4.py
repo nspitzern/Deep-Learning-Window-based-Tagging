@@ -30,7 +30,7 @@ def pos(is_pretrained):
     is_pos = True
 
     # define model's parameters
-    vocab_size = len(word2index.keys()) - 1
+    vocab_size = len(word2index.keys())
     embed_size = 50
     num_words = 5
     out_dim = len(label2index.keys())
@@ -68,11 +68,11 @@ def pos(is_pretrained):
     #     f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path'
     # )
 
-    test_data = DataLoader(pos_test_set, batch_size=1, shuffle=False, num_workers=4)
-
-    predictions = predict(test_data, model, device, index2label)
-
-    utils.export_predictions(predictions, 'test4.pos')
+    # test_data = DataLoader(pos_test_set, batch_size=1, shuffle=False, num_workers=4)
+    #
+    # predictions = predict(test_data, model, device, index2label)
+    #
+    # utils.export_predictions(predictions, 'test4.pos')
 
 
 def ner(is_pretrained):
@@ -95,7 +95,7 @@ def ner(is_pretrained):
     is_pos = False
 
     # define model's parameters
-    vocab_size = len(word2index.keys()) - 1
+    vocab_size = len(word2index.keys())
     embed_size = 50
     num_words = 5
     out_dim = len(label2index.keys())
@@ -139,11 +139,11 @@ def ner(is_pretrained):
     #         ner_test_set[i][j] = word2index.get(ner_test_set[i][j], word2index['UUUNKKK'])
 
     # define test dataloader
-    test_data = DataLoader(ner_test_set, batch_size=1, shuffle=False, num_workers=4)
-
-    predictions = predict(test_data, model, device, index2label)
-
-    utils.export_predictions(predictions, 'test4.ner')
+    # test_data = DataLoader(ner_test_set, batch_size=1, shuffle=False, num_workers=4)
+    #
+    # predictions = predict(test_data, model, device, index2label)
+    #
+    # utils.export_predictions(predictions, 'test4.ner')
 
 
 if __name__ == '__main__':
