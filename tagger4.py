@@ -15,14 +15,14 @@ class Tagger4Model(nn.Module):
         self.chars_size = chars_size
 
         self.char_embed_layer = nn.Embedding(total_chars_in_corpus, c_embed_size)
-        self.conv = nn.Conv1d(self.c_embed_size, self.c_embed_size, kernel_size=3, stride=1, padding=1)
+        self.conv = nn.Conv1d(self.c_embed_size, self.c_embed_size * 5, kernel_size=3, stride=1, padding=1)
         self.pooling = nn.MaxPool1d(self.chars_size)
 
         self.embedding_layer = nn.Embedding(vocab_size, embed_size)
         if is_pretrained:
             self.embedding_layer.weight.data.copy_(torch.from_numpy(embeddings).float())
 
-        self.layer1 = nn.Linear(num_words * embed_size + c_embed_size, hidden_dim)
+        self.layer1 = nn.Linear(num_words * embed_size + c_embed_size * 5, hidden_dim)
         self.layer2 = nn.Linear(hidden_dim, out_dim)
         self.dropout = nn.Dropout(0.5)
 
@@ -34,7 +34,15 @@ class Tagger4Model(nn.Module):
         chars = self.char_embed_layer(chars_idxs)
         chars = self.dropout(chars)
         chars = self.conv(chars)
-        chars = self.pooling(chars).view(-1, self.c_embed_size)
+        with torch.no_grad():
+            num_filters = 5
+            num_chars = 3
+            _, top_filters = torch.topk(chars, num_filters)
+            _, top_chars_inx = torch.topk(chars[:, :, top_filters[2]], num_chars)
+            top_chars = chars[top_chars_inx]
+            print(top_chars.tolist())
+            top_filters_count = torch.bincount(top_filters.view(top_filters.shape[0] * k * self.c_embed_size * 5))
+        chars = self.pooling(chars).view(-1, self.c_embed_size * 5)
         
         # get the embedded vectors of each word and concat to a large vector
         x = self.embedding_layer(words_idxs).view(-1, self.num_words * self.embed_size)
@@ -44,7 +52,7 @@ class Tagger4Model(nn.Module):
         x = torch.tanh(self.layer1(x))
         out = self.softmax(self.layer2(x))
 
-        return out
+        return out, top_filters_count
 
 
 def train_model(train_set, dev_set, model,  n_epochs, lr, device, index2word, word2index, index2label, is_pos=False):
@@ -60,7 +68,7 @@ def train_model(train_set, dev_set, model,  n_epochs, lr, device, index2word, wo
     dev_accuracy = []
 
     for e in range(n_epochs):
-        train_loss = train(model, train_set, optimizer, criterion, device)
+        train_loss, _ = train(model, train_set, optimizer, criterion, device)
         _, train_acc = evaluate(model, train_set, criterion, device, index2label, is_pos)
         train_losses.append(train_loss)
         train_accuracy.append(train_acc)
@@ -94,7 +102,7 @@ def train(model, train_set, optimizer, criterion, device):
         optimizer.zero_grad()
 
         # predict
-        outputs = model(words_batch, chars_idxs)
+        outputs, top_filters_count = model(words_batch, chars_idxs)
 
         loss = criterion(outputs.squeeze(), labels_batch)
         loss.backward()
@@ -104,7 +112,7 @@ def train(model, train_set, optimizer, criterion, device):
 
         running_loss += loss.item()
 
-    return running_loss / len(train_set.dataset)
+    return running_loss / len(train_set.dataset), top_filters_count
 
 
 def evaluate(model, dev_set, criterion, device, index2label, is_pos):
@@ -150,11 +158,14 @@ def evaluate(model, dev_set, criterion, device, index2label, is_pos):
     return running_loss / len(dev_set.dataset), round(100 * correct / total, 3)
 
 
-def predict(test_set, model, device, index2label):
+def predict(test_set, model, device, index2label, c_embed_size):
     model.to(device)
     model.eval()
 
     predicted_labels = []
+    k = 5
+    
+    total_top_filters_count = torch.zeros(c_embed_size).to(device)
 
     for i, data in enumerate(test_set):
         words_batch, chars_idxs = data
@@ -166,7 +177,7 @@ def predict(test_set, model, device, index2label):
         chars_idxs = chars_idxs.to(device)
 
         # predict
-        outputs = model(words_batch, chars_idxs)
+        outputs, top_filters_count = model(words_batch, chars_idxs)
 
         # get the index of the label
         index = torch.argmax(outputs)
@@ -175,6 +186,11 @@ def predict(test_set, model, device, index2label):
         label = index2label.get(index.item(), 'UNSEEN')
 
         predicted_labels.append(label)
+        
+        total_top_filters_count += top_filters_count
+    
+    _, top_filters = torch.topk(total_top_filters_count, k)
+    print(f'Top meaningful convolution filters: {top_filters.tolist()}')
 
     return predicted_labels
 
