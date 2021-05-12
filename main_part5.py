@@ -1,4 +1,5 @@
 import sys
+import os
 
 import torch
 from torch.utils.data import DataLoader
@@ -7,6 +8,7 @@ import numpy as np
 import utils
 from tagger4 import Tagger4Model, train_model, predict, convert_dataset_to_index
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 
 def pos():
     is_pretrained = True
@@ -76,7 +78,7 @@ def pos():
 
     test_data = DataLoader(pos_test_set, batch_size=1, shuffle=False, num_workers=0)
 
-    predictions = predict(test_data, model, device, index2label)
+    predictions = predict(test_data, model, device, index2label, c_embed_size)
 
     utils.export_predictions(predictions, 'test5.pos')
 
@@ -147,7 +149,7 @@ def ner():
     # define test dataloader
     test_data = DataLoader(ner_test_set, batch_size=1, shuffle=False, num_workers=0)
 
-    predictions = predict(test_data, model, device, index2label)
+    predictions = predict(test_data, model, device, index2label, c_embed_size)
 
     utils.export_predictions(predictions, 'test5.ner')
 
