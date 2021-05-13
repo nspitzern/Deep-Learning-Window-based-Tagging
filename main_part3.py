@@ -50,20 +50,25 @@ def pos():
     embeddings = np.loadtxt('pretrained vectors.txt')
     model = Tagger2Model(vocab_size, embed_size, num_words, hidden_dim, out_dim, embeddings)
 
-    train_model(train_data, dev_data, model, n_epochs, lr, device, index2word, word2index, index2label, is_pos)
+    # train_model(train_data, dev_data, model, n_epochs, lr, device, index2word, word2index, index2label, is_pos)
 
-    # path = '.'
-    #
-    # model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history = utils.load_model(
-    #     model, f'{path}/model.path', f'{path}/train_loss_history.path', f'{path}/train_accuracy_history.path',
-    #     f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path'
-    # )
+    path = './pos results part 3'
 
-    # test_data = DataLoader(pos_test_set, batch_size=1, shuffle=False, num_workers=4)
-    #
-    # predictions = predict(test_data, model, device, index2label)
-    #
-    # utils.export_predictions(predictions, 'test3.pos')
+    model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history = utils.load_model(
+        model, f'{path}/model.path', f'{path}/train_loss_history.path', f'{path}/train_accuracy_history.path',
+        f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path'
+    )
+
+    test_data = DataLoader(pos_test_set, batch_size=1, shuffle=False, num_workers=4)
+
+    predictions = predict(test_data, model, device, index2label)
+
+    utils.export_predictions(predictions, 'test3.pos')
+
+    # draw graphs of loss and accuracy history
+    utils.draw_graphs(train_loss_history, dev_loss_history, n_epochs, 'Loss History', 'Train Loss', 'Validation Loss')
+    utils.draw_graphs(train_accuracy_history, dev_accuracy_history, n_epochs, 'Accuracy History', 'Train Accuracy',
+                      'Validation Accuracy')
 
 
 def ner():
@@ -106,20 +111,24 @@ def ner():
     embeddings = np.loadtxt('pretrained vectors.txt')
     model = Tagger2Model(vocab_size, embed_size, num_words, hidden_dim, out_dim, embeddings)
 
-    train_model(train_data, dev_data, model, n_epochs, lr, device, index2word, word2index, index2label, is_pos)
+    # train_model(train_data, dev_data, model, n_epochs, lr, device, index2word, word2index, index2label, is_pos)
 
-    # path = '.'
-    #
-    # model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history = utils.load_model(
-    #     model, f'{path}/model.path', f'{path}/train_loss_history.path', f'{path}/train_accuracy_history.path',
-    #     f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path'
-    # )
+    path = './ner results part 3'
 
-    # test_data = DataLoader(ner_test_set, batch_size=1, shuffle=False, num_workers=4)
-    #
-    # predictions = predict(test_data, model, device, index2label)
-    #
-    # utils.export_predictions(predictions, 'test3.ner')
+    model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history = utils.load_model(
+        model, f'{path}/model.path', f'{path}/train_loss_history.path', f'{path}/train_accuracy_history.path',
+        f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path'
+    )
+
+    test_data = DataLoader(ner_test_set, batch_size=1, shuffle=False, num_workers=4)
+
+    predictions = predict(test_data, model, device, index2label)
+
+    utils.export_predictions(predictions, 'test3.ner')
+
+    # draw graphs of loss and accuracy history
+    utils.draw_graphs(train_loss_history, dev_loss_history, n_epochs, 'Loss History', 'Train Loss', 'Validation Loss')
+    utils.draw_graphs(train_accuracy_history, dev_accuracy_history, n_epochs, 'Accuracy History', 'Train Accuracy', 'Validation Accuracy')
 
     
 if __name__ == '__main__':

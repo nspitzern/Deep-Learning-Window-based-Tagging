@@ -59,20 +59,20 @@ def pos(is_pretrained):
     model = Tagger3Model(vocab_size, embed_size, num_words, hidden_dim, out_dim, len(prefix2index.keys()),
                          len(suffix2index.keys()), is_pretrained=is_pretrained, embeddings=embeddings)
 
-    train_model(train_data, dev_data, model, n_epochs, lr, device, index2word, word2index, index2label, is_pos)
+    # train_model(train_data, dev_data, model, n_epochs, lr, device, index2word, word2index, index2label, is_pos)
 
-    # path = '.'
-    #
-    # model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history = utils.load_model(
-    #     model, f'{path}/model.path', f'{path}/train_loss_history.path', f'{path}/train_accuracy_history.path',
-    #     f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path'
-    # )
+    path = './pos results part 4'
 
-    # test_data = DataLoader(pos_test_set, batch_size=1, shuffle=False, num_workers=4)
-    #
-    # predictions = predict(test_data, model, device, index2label)
-    #
-    # utils.export_predictions(predictions, 'test4.pos')
+    model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history = utils.load_model(
+        model, f'{path}/model.path', f'{path}/train_loss_history.path', f'{path}/train_accuracy_history.path',
+        f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path'
+    )
+
+    test_data = DataLoader(pos_test_set, batch_size=1, shuffle=False, num_workers=4)
+
+    predictions = predict(test_data, model, device, index2label)
+
+    utils.export_predictions(predictions, 'test4.pos')
 
 
 def ner(is_pretrained):
@@ -100,8 +100,8 @@ def ner(is_pretrained):
     num_words = 5
     out_dim = len(label2index.keys())
 
-    lr = 1e-3
-    n_epochs = 6
+    lr = 1e-4
+    n_epochs = 15
     batch_size_train = 32
     batch_size_dev = 32
     hidden_dim = 150
@@ -126,24 +126,19 @@ def ner(is_pretrained):
 
     train_model(train_data, dev_data, model, n_epochs, lr, device, index2word, word2index, index2label, is_pos)
 
-    # path = '.'
+    # path = './ner results part 4'
     #
     # model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history = utils.load_model(
     #     model, f'{path}/model.path', f'{path}/train_loss_history.path', f'{path}/train_accuracy_history.path',
     #     f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path'
     # )
 
-
-    # for i in range(len(ner_test_set)):
-    #     for j in range(len(ner_test_set[i])):
-    #         ner_test_set[i][j] = word2index.get(ner_test_set[i][j], word2index['UUUNKKK'])
-
     # define test dataloader
-    # test_data = DataLoader(ner_test_set, batch_size=1, shuffle=False, num_workers=4)
-    #
-    # predictions = predict(test_data, model, device, index2label)
-    #
-    # utils.export_predictions(predictions, 'test4.ner')
+    test_data = DataLoader(ner_test_set, batch_size=1, shuffle=False, num_workers=4)
+
+    predictions = predict(test_data, model, device, index2label)
+
+    utils.export_predictions(predictions, 'test4.ner')
 
 
 if __name__ == '__main__':
