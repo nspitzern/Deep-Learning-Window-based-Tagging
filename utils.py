@@ -36,6 +36,7 @@ def create_char_inx_dict():
 
     for inx, char in enumerate(alphabet):
         char2index[char] = inx + 3
+        index2char[inx + 3] = char
         
     return char2index, index2char
 

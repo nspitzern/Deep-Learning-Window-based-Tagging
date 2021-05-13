@@ -64,7 +64,7 @@ def pos():
     model = Tagger4Model(vocab_size, embed_size, c_embed_size, num_words, hidden_dim, out_dim, max_word_size,
                          len(char2index.keys()), is_pretrained=is_pretrained, embeddings=embeddings)
 
-    # train_model(train_data, dev_data, model, n_epochs, lr, device, index2word, word2index, index2label, is_pos)
+    # train_model(train_data, dev_data, model, n_epochs, lr, device, index2word, word2index, index2label, index2char, is_pos)
 
     path = './pos results part 5'
 
@@ -78,7 +78,7 @@ def pos():
 
     test_data = DataLoader(pos_test_set, batch_size=1, shuffle=False, num_workers=0)
 
-    predictions = predict(test_data, model, device, index2label, c_embed_size)
+    predictions = predict(test_data, model, device, index2label, index2char, index2word, c_embed_size)
 
     utils.export_predictions(predictions, 'test5.pos')
 
@@ -137,7 +137,7 @@ def ner():
                          len(char2index.keys()),
                          is_pretrained=is_pretrained, embeddings=embeddings)
 
-    train_model(train_data, dev_data, model, n_epochs, lr, device, index2word, word2index, index2label, is_pos)
+    train_model(train_data, dev_data, model, n_epochs, lr, device, index2word, word2index, index2label, index2char, is_pos)
 
     # path = '.'
     #
@@ -149,7 +149,7 @@ def ner():
     # define test dataloader
     test_data = DataLoader(ner_test_set, batch_size=1, shuffle=False, num_workers=0)
 
-    predictions = predict(test_data, model, device, index2label, c_embed_size)
+    predictions = predict(test_data, model, device, index2label, index2char, index2word, c_embed_size)
 
     utils.export_predictions(predictions, 'test5.ner')
 
