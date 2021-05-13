@@ -136,7 +136,7 @@ def predict(test_set, model, device, index2label):
 
     for i, data in enumerate(test_set):
         words_batch = data
-        words_batch = torch.stack(words_batch)
+        words_batch = torch.stack(words_batch[0])
         words_batch = words_batch.to(device)
 
         # predict
