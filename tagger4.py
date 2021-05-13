@@ -37,15 +37,19 @@ class Tagger4Model(nn.Module):
         if meaning_filters:
             with torch.no_grad():
                 num_filters = 5
-                num_chars = 3
                 word = index2word.get(words_idxs[0, 2].item(), 'UNSEEN')
-                _, top_filters = torch.topk(chars[:, self.c_embed_size*2:self.c_embed_size*3, :], num_filters)
-                conv_meaningful_filters = torch.gather(chars, 2, top_filters)
+                num_chars = min(3, len(word))
+                temp_chars = chars_idxs.clone()
+                temp_chars[temp_chars == 1] = 0                
+                actual_words = (temp_chars).nonzero(as_tuple=True)[1]
+                meaning_idxs = chars_idxs[:, actual_words]
+                _, top_filters = torch.topk(chars[:, self.c_embed_size*2:self.c_embed_size*3, :][:, actual_words, :], num_filters)
+                conv_meaningful_filters = torch.gather(chars[:, self.c_embed_size*2:self.c_embed_size*3, :][:, actual_words, :], 2, top_filters)
                 _, top_chars_inx = torch.topk(conv_meaningful_filters, num_chars, 1)
                 for filter in range(top_chars_inx.shape[2]):
                     meaningful_chars_filter = []
                     for char in range(top_chars_inx.shape[1]):
-                        meaningful_chars_filter.append(index2char.get(chars_idxs[:, top_chars_inx[:, char, filter].item()].item(), 'UNSEEN'))
+                        meaningful_chars_filter.append(index2char.get(meaning_idxs[:, top_chars_inx[:, char, filter].item()].item(), 'UNSEEN'))
                     print(f'Chars from meaningful filter #{filter} of word {word}: {meaningful_chars_filter}')
         chars = self.pooling(chars).view(-1, self.c_embed_size * 5)
         
