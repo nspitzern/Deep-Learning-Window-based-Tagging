@@ -1,0 +1,1 @@
+[8/8] train loss: 0.001095289065447984, train accuracy: 95.401%, dev loss: 0.006078059872498023, dev accuracy: 75.63%

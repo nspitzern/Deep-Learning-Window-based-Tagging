@@ -26,7 +26,7 @@ def pos():
     out_dim = len(label2index.keys())
 
     lr = 1e-3
-    n_epochs = 7
+    n_epochs = 8
     batch_size_train = 32
     batch_size_dev = 32
     hidden_dim = 150
@@ -47,7 +47,7 @@ def pos():
     tagger1.train_model(train_data, dev_data, model, n_epochs, lr, device, index2label, is_pos)
 
     # path = './pos results part 1'
-
+    #
     # model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history = utils.load_model(
     #     model, f'{path}/model.path', f'{path}/train_loss_history.path', f'{path}/train_accuracy_history.path',
     #     f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path'
@@ -84,10 +84,10 @@ def ner():
     out_dim = len(label2index.keys())
 
     lr = 1e-3
-    n_epochs = 6
+    n_epochs = 8
     batch_size_train = 32
-    batch_size_dev = 128
-    hidden_dim = 100
+    batch_size_dev = 32
+    hidden_dim = 150
 
     print(
         f'Run config - is POS: {is_pos}, vocab size: {vocab_size}, embed size: {embed_size}, window size: {num_words},'
@@ -102,14 +102,14 @@ def ner():
 
     model = tagger1.Tagger1Model(vocab_size, embed_size, num_words, hidden_dim, out_dim)
 
-    tagger1.train_model(train_data, dev_data, model, n_epochs, lr, device, index2label, is_pos)
+    # tagger1.train_model(train_data, dev_data, model, n_epochs, lr, device, index2label, is_pos)
 
-    # path = './pos results part 1'
+    path = './ner results part 1'
 
-    # model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history = utils.load_model(
-    #     model, f'{path}/model.path', f'{path}/train_loss_history.path', f'{path}/train_accuracy_history.path',
-    #     f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path'
-    # )
+    model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history = utils.load_model(
+        model, f'{path}/model.path', f'{path}/train_loss_history.path', f'{path}/train_accuracy_history.path',
+        f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path'
+    )
 
     for i in range(len(ner_test_set)):
         for j in range(len(ner_test_set[i])):
