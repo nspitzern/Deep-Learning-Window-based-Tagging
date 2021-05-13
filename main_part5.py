@@ -14,9 +14,9 @@ def pos():
     is_pretrained = True
     pos_train_set, word2index, index2word, label2index, index2label = utils.parse_POS('./pos/train', window_size=2)
 
-    max_word_size = 30
+    max_word_size = 20
     if is_pretrained:
-        word2index, index2words = utils.get_pretrained_words()
+        word2index, index2word = utils.get_pretrained_words()
 
     char2index, index2char = utils.create_char_inx_dict()
     pos_train_set = convert_dataset_to_index(pos_train_set, word2index, label2index, char2index, max_word_size,
@@ -36,7 +36,7 @@ def pos():
     # define model's parameters
     vocab_size = len(word2index.keys())
     embed_size = 50
-    c_embed_size = 30
+    c_embed_size = 20
     num_words = 5
     out_dim = len(label2index.keys())
 
@@ -64,14 +64,16 @@ def pos():
     model = Tagger4Model(vocab_size, embed_size, c_embed_size, num_words, hidden_dim, out_dim, max_word_size,
                          len(char2index.keys()), is_pretrained=is_pretrained, embeddings=embeddings)
 
-    # train_model(train_data, dev_data, model, n_epochs, lr, device, index2word, word2index, index2label, index2char, is_pos)
+    train_model(train_data, dev_data, model, n_epochs, lr, device, index2word, word2index, index2label, index2char, is_pos)
 
+    """
     path = './pos results part 5'
 
     model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history = utils.load_model(
         model, f'{path}/model.path', f'{path}/train_loss_history.path', f'{path}/train_accuracy_history.path',
         f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path'
     )
+    """
 
     # utils.draw_graphs(train_loss_history, dev_loss_history, n_epochs, 'Loss History', 'Train Loss', 'Validation Loss')
     # utils.draw_graphs(train_accuracy_history, dev_accuracy_history, n_epochs, 'Accuracy History', 'Train Accuracy', 'Validation Accuracy')
@@ -87,9 +89,9 @@ def ner():
     is_pretrained = True
     ner_train_set, word2index, index2word, label2index, index2label = utils.parse_NER('./ner/train', window_size=2)
 
-    max_word_size = 30
+    max_word_size = 20
     if is_pretrained:
-        word2index, index2words = utils.get_pretrained_words()
+        word2index, index2word = utils.get_pretrained_words()
 
     char2index, index2char = utils.create_char_inx_dict()
     ner_train_set = convert_dataset_to_index(ner_train_set, word2index, label2index, char2index, max_word_size,
@@ -108,7 +110,7 @@ def ner():
     # define model's parameters
     vocab_size = len(word2index.keys())
     embed_size = 50
-    c_embed_size = 30
+    c_embed_size = 20
     num_words = 5
     out_dim = len(label2index.keys())
 
