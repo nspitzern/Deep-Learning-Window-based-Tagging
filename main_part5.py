@@ -8,7 +8,7 @@ import numpy as np
 import utils
 from tagger4 import Tagger4Model, train_model, predict, convert_dataset_to_index
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "5"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 
 def pos():
     is_pretrained = True
@@ -64,16 +64,14 @@ def pos():
     model = Tagger4Model(vocab_size, embed_size, c_embed_size, num_words, hidden_dim, out_dim, max_word_size,
                          len(char2index.keys()), is_pretrained=is_pretrained, embeddings=embeddings)
 
-    #train_model(train_data, dev_data, model, n_epochs, lr, device, index2word, word2index, index2label, index2char, is_pos)
+    train_model(train_data, dev_data, model, n_epochs, lr, device, index2word, word2index, index2label, index2char, is_pos)
 
-    
     path = './pos results part 5'
 
     model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history = utils.load_model(
         model, f'{path}/model.path', f'{path}/train_loss_history.path', f'{path}/train_accuracy_history.path',
         f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path'
     )
-    
 
     # utils.draw_graphs(train_loss_history, dev_loss_history, n_epochs, 'Loss History', 'Train Loss', 'Validation Loss')
     # utils.draw_graphs(train_accuracy_history, dev_accuracy_history, n_epochs, 'Accuracy History', 'Train Accuracy', 'Validation Accuracy')
@@ -140,14 +138,17 @@ def ner():
                          is_pretrained=is_pretrained, embeddings=embeddings)
 
     train_model(train_data, dev_data, model, n_epochs, lr, device, index2word, word2index, index2label, index2char, is_pos)
-    """
+
     path = './ner results part 5'
     
     model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history = utils.load_model(
         model, f'{path}/model.path', f'{path}/train_loss_history.path', f'{path}/train_accuracy_history.path',
         f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path'
     )
-    """
+
+    # utils.draw_graphs(train_loss_history, dev_loss_history, n_epochs, 'Loss History', 'Train Loss', 'Validation Loss')
+    # utils.draw_graphs(train_accuracy_history, dev_accuracy_history, n_epochs, 'Accuracy History', 'Train Accuracy', 'Validation Accuracy')
+
     # define test dataloader
     test_data = DataLoader(ner_test_set, batch_size=1, shuffle=False, num_workers=0)
 

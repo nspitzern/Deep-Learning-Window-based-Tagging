@@ -251,6 +251,6 @@ def draw_graphs(train_history, dev_history, n_epochs, plot_title, train_title, d
     ax2.set_title(dev_title)
     ax2.plot(x, dev_history)
     
-    plt.savefig(plot_title + '_' + str(n_epochs) + '_epochs_part3_ner.png')
+    # plt.savefig(plot_title + '_' + str(n_epochs) + '_epochs_part3_ner.png')
 
     plt.show()

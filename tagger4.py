@@ -33,26 +33,46 @@ class Tagger4Model(nn.Module):
         # get the embedded vectors of each char and concat to a large vector
         chars = self.char_embed_layer(chars_idxs)
         chars = self.dropout(chars)
+
         chars = self.conv(chars)
+
+        if meaning_filters:
+            after_conv = torch.clone(chars)
+        # if meaning_filters:
+        #     with torch.no_grad():
+        #         num_filters = 5
+        #         word = index2word.get(words_idxs[0, 2].item(), 'UNSEEN')
+        #         num_chars = min(3, len(word))
+        #         temp_chars = chars_idxs.clone()
+        #         temp_chars[temp_chars == 1] = 0
+        #         actual_words = (temp_chars).nonzero(as_tuple=True)[1]
+        #         meaning_idxs = chars_idxs[:, actual_words]
+        #         _, top_filters = torch.topk(chars[:, self.c_embed_size*2:self.c_embed_size*3, :][:, actual_words, :], num_filters)
+        #         conv_meaningful_filters = torch.gather(chars[:, self.c_embed_size*2:self.c_embed_size*3, :][:, actual_words, :], 2, top_filters)
+        #         _, top_chars_inx = torch.topk(conv_meaningful_filters, num_chars, 1)
+        #         for filter in range(top_chars_inx.shape[2]):
+        #             meaningful_chars_filter = []
+        #             for char in range(top_chars_inx.shape[1]):
+        #                 meaningful_chars_filter.append(index2char.get(meaning_idxs[:, top_chars_inx[:, char, filter].item()].item(), 'UNSEEN'))
+        #             print(f'Chars from meaningful filter #{filter} of word {word}: {meaningful_chars_filter}')
+        chars = self.pooling(chars).view(-1, self.c_embed_size * 5)
+
         if meaning_filters:
             with torch.no_grad():
-                num_filters = 5
-                word = index2word.get(words_idxs[0, 2].item(), 'UNSEEN')
-                num_chars = min(3, len(word))
-                temp_chars = chars_idxs.clone()
-                temp_chars[temp_chars == 1] = 0                
-                actual_words = (temp_chars).nonzero(as_tuple=True)[1]
-                meaning_idxs = chars_idxs[:, actual_words]
-                _, top_filters = torch.topk(chars[:, self.c_embed_size*2:self.c_embed_size*3, :][:, actual_words, :], num_filters)
-                conv_meaningful_filters = torch.gather(chars[:, self.c_embed_size*2:self.c_embed_size*3, :][:, actual_words, :], 2, top_filters)
-                _, top_chars_inx = torch.topk(conv_meaningful_filters, num_chars, 1)
-                for filter in range(top_chars_inx.shape[2]):
-                    meaningful_chars_filter = []
-                    for char in range(top_chars_inx.shape[1]):
-                        meaningful_chars_filter.append(index2char.get(meaning_idxs[:, top_chars_inx[:, char, filter].item()].item(), 'UNSEEN'))
-                    print(f'Chars from meaningful filter #{filter} of word {word}: {meaningful_chars_filter}')
-        chars = self.pooling(chars).view(-1, self.c_embed_size * 5)
-        
+                # take best filter index (filter with best score after pooling)
+                filters_idxs = torch.topk(chars, k=1, dim=1)[1].squeeze(0)
+                best_filter = after_conv[:, filters_idxs].squeeze()
+
+                # take best letters indices from the conv filter
+                conv_idx = torch.topk(best_filter, k=1)[1]
+                best_chars = chars_idxs[:, conv_idx.item(): conv_idx.item() + 3]
+
+                word_idx = words_idxs[:, words_idxs.shape[1] // 2].item()
+
+                # best_chars = [index2char[c_idx] for c_idx in best_chars]
+                best_chars = best_chars.tolist()[0]
+                print(f'For word: "{index2word[word_idx]}" best characters are: {[index2char[c_idx] for c_idx in best_chars]} with filter #{filters_idxs.item()}')
+
         # get the embedded vectors of each word and concat to a large vector
         x = self.embedding_layer(words_idxs).view(-1, self.num_words * self.embed_size)
 
@@ -172,11 +192,11 @@ def predict(test_set, model, device, index2label, index2char, index2word, c_embe
     model.eval()
 
     predicted_labels = []
-    
-    
+
     for i, data in enumerate(test_set):
         meaning_filters = False
-        if i < 20:
+
+        if i < 1000:
             meaning_filters = True
         words_batch, chars_idxs = data
 
