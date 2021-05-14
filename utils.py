@@ -7,8 +7,10 @@ def create_word_vec_dict():
     vecs = torch.from_numpy(np.loadtxt("pretrained vectors.txt"))
     with open("words.txt", 'r') as words_file:
         words = words_file.read().splitlines()
-    words2vecs = {'<s>': torch.zeros(vecs.shape[1], dtype=torch.float), '</s>': torch.zeros(vecs.shape[1], dtype=torch.float)}
-    words2inx = {'<s>': 0, '</s>': 1}
+    # words2vecs = {'<s>': torch.zeros(vecs.shape[1], dtype=torch.float), '</s>': torch.zeros(vecs.shape[1], dtype=torch.float)}
+    # words2inx = {'<s>': 0, '</s>': 1}
+    words2vecs = {}
+    words2inx = {}
     i, j = 0, len(words2vecs)
     for word in words:
         if word not in words2vecs:
