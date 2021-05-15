@@ -66,21 +66,20 @@ def pos():
 
     train_model(train_data, dev_data, model, n_epochs, lr, device, index2word, word2index, index2label, index2char, is_pos)
 
-    path = './pos results part 5'
-
-    model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history = utils.load_model(
-        model, f'{path}/model.path', f'{path}/train_loss_history.path', f'{path}/train_accuracy_history.path',
-        f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path'
-    )
-
-    # utils.draw_graphs(train_loss_history, dev_loss_history, n_epochs, 'Loss History', 'Train Loss', 'Validation Loss')
-    # utils.draw_graphs(train_accuracy_history, dev_accuracy_history, n_epochs, 'Accuracy History', 'Train Accuracy', 'Validation Accuracy')
+    # path = './pos results part 5'
+    #
+    # model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history = utils.load_model(
+    #     model, f'{path}/model.path', f'{path}/train_loss_history.path', f'{path}/train_accuracy_history.path',
+    #     f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path'
+    # )
 
     test_data = DataLoader(pos_test_set, batch_size=1, shuffle=False, num_workers=0)
 
     predictions = predict(test_data, model, device, index2label, index2char, index2word, c_embed_size)
 
-    utils.export_predictions(predictions, 'test5.pos')
+    with open('./pos/test', 'r', encoding='utf-8') as f:
+        test_set = f.readlines()
+    utils.export_predictions(predictions, test_set, 'test5.pos', is_pos)
 
 
 def ner():
@@ -139,22 +138,21 @@ def ner():
 
     train_model(train_data, dev_data, model, n_epochs, lr, device, index2word, word2index, index2label, index2char, is_pos)
 
-    path = './ner results part 5'
-    
-    model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history = utils.load_model(
-        model, f'{path}/model.path', f'{path}/train_loss_history.path', f'{path}/train_accuracy_history.path',
-        f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path'
-    )
-
-    # utils.draw_graphs(train_loss_history, dev_loss_history, n_epochs, 'Loss History', 'Train Loss', 'Validation Loss')
-    # utils.draw_graphs(train_accuracy_history, dev_accuracy_history, n_epochs, 'Accuracy History', 'Train Accuracy', 'Validation Accuracy')
+    # path = './ner results part 5'
+    #
+    # model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history = utils.load_model(
+    #     model, f'{path}/model.path', f'{path}/train_loss_history.path', f'{path}/train_accuracy_history.path',
+    #     f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path'
+    # )
 
     # define test dataloader
     test_data = DataLoader(ner_test_set, batch_size=1, shuffle=False, num_workers=0)
 
     predictions = predict(test_data, model, device, index2label, index2char, index2word, c_embed_size)
 
-    utils.export_predictions(predictions, 'test5.ner')
+    with open('./ner/test', 'r', encoding='utf-8') as f:
+        test_set = f.readlines()
+    utils.export_predictions(predictions, test_set, 'test5.ner', is_pos)
 
 
 if __name__ == '__main__':

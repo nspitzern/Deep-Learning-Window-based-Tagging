@@ -62,7 +62,9 @@ def pos():
 
     predictions = tagger1.predict(test_data, model, device, index2label)
 
-    utils.export_predictions(predictions, 'test1.pos')
+    with open('./pos/test', 'r', encoding='utf-8') as f:
+        test_set = f.readlines()
+    utils.export_predictions(predictions, test_set, 'test1.pos', is_pos)
 
 
 def ner():
@@ -102,14 +104,14 @@ def ner():
 
     model = tagger1.Tagger1Model(vocab_size, embed_size, num_words, hidden_dim, out_dim)
 
-    # tagger1.train_model(train_data, dev_data, model, n_epochs, lr, device, index2label, is_pos)
+    tagger1.train_model(train_data, dev_data, model, n_epochs, lr, device, index2label, is_pos)
 
-    path = './ner results part 1'
-
-    model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history = utils.load_model(
-        model, f'{path}/model.path', f'{path}/train_loss_history.path', f'{path}/train_accuracy_history.path',
-        f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path'
-    )
+    # path = './ner results part 1'
+    #
+    # model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history = utils.load_model(
+    #     model, f'{path}/model.path', f'{path}/train_loss_history.path', f'{path}/train_accuracy_history.path',
+    #     f'{path}/dev_loss_history.path', f'{path}/dev_accuracy_history.path'
+    # )
 
     for i in range(len(ner_test_set)):
         for j in range(len(ner_test_set[i])):
@@ -120,7 +122,9 @@ def ner():
 
     predictions = tagger1.predict(test_data, model, device, index2label)
 
-    utils.export_predictions(predictions, 'test1.ner')
+    with open('./ner/test', 'r', encoding='utf-8') as f:
+        test_set = f.readlines()
+    utils.export_predictions(predictions, test_set, 'test1.ner', is_pos)
 
 
 if __name__ == '__main__':

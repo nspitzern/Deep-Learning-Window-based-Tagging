@@ -70,6 +70,7 @@ def parse_NER(file_path, window_size):
             for i in range(window_size, len(words) - window_size):
                 # for each word split into word and label
                 word, ner = words[i].split('\t')
+                real_word = word
                 word = word.lower()
                 dataset.append((ner, [w.split('\t')[0].lower() for w in words[i - window_size: i + window_size + 1]]))
 
@@ -222,10 +223,26 @@ def parse_test_file(file_path, window_size):
     return dataset
 
 
-def export_predictions(predictions, path):
+def export_predictions(predictions, test_set, path, is_pos):
     with open(path, 'w', encoding='utf-8') as f:
-        f.writelines('\n'.join(predictions))
+        # f.writelines('\n'.join(predictions))
+        line = ''
+        j = 0
 
+        for i in range(len(test_set)):
+            word = test_set[i]
+
+            if word == '\n':
+                line += '\n'
+            else:
+                tag = predictions[j]
+                if is_pos:
+                    line += word.strip() + ' ' + tag + '\n'
+                else:
+                    line += word.strip() + '\t' + tag + '\n'
+                j += 1
+
+        f.write(line)
 
 def save_model(model, train_loss_history, train_accuracy_history, dev_loss_history, dev_accuracy_history, path):
     torch.save(model.state_dict(), f'{path}/model.path')
